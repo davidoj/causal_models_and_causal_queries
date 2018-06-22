@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Causal Graphical Models }
+% \author{David Johnston}
+
+\usepackage[mathscr]{euscript}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage {tikz}
+\usetikzlibrary {positioning}
+\usepackage[a4paper, margin=0.7in]{geometry}
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0em}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{hyperref}
+
+\theoremstyle{definition}
+\newtheorem{question}{Question}[section]
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+ 
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+ 
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\setcounter{secnumdepth}{6}
+
+\newcommand{\NC}[2]{\ensuremath{{#1}\not\to{#2}}}
+\newcommand{\CI}{\mathrel{\text{\scalebox{1.07}{$\perp\mkern-10mu\perp$}}}}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+% \include{causal_model_definitions}
+
+%\include{causal_queries}
+
+\include{key_questions}
+
+\bibliographystyle{plain}
+\bibliography{references.bib}
+
+
+\end{document}

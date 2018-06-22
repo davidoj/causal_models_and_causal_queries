@@ -1,0 +1,18 @@
+\section{Causal Queries}
+
+\subsection{Inferring a causal model}
+
+Given data $D$ over variables $\mathbf{V}$, a class of possible causal models $\mathcal{M}$ and a $D$-dependent loss $\mathcal{L}_D:\mathcal{M}\to \mathbb{R}$, which models $M\subset \mathcal{M}$ minimise $\mathcal{L}_D$?
+
+Examples: Pearl, chapter 2 \cite{pearl_causality:_2009} - uses estimated distribution $\hat{P}$ rather than data $D$. Proposes two algorithms $IC$ and $IC^*$. Both output sets of CBNs with common conditional independence properties.
+
+$IC$ considers the class $\mathcal{M}\subset\text{CBN}$ which is the union of all causal structures that can be represented as graphs with exactly one node for each $V\in\mathbf{V}$.
+
+$IC^*$ considers the class that is the union of all causal structures that can be represented as graphs with one node for each $V\in\mathbf{V}$ and one common cause node for each pair of variables.
+
+
+\subsection{Predicting the effect of an intervention}
+
+Given data $D$ over variables $\mathbf{V}$ and intervention space $\mathcal{I}$, outcome variables $\mathbf{Y}\subset\mathbf{V}$ predictor $\hat{M}:\mathcal{I}\to\text{Range}(Y)$ and loss $\mathcal{L}_D:\hat{M}\to\mathbb{R}$, find $\hat{M}$ minimising $\mathcal{L}_D$.*
+
+What if we want the complete distribution over $Y$ rather than a point estimate?

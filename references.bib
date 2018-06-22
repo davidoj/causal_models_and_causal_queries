@@ -1,0 +1,152 @@
+
+@article{lemeire_replacing_2013,
+	title = {Replacing {Causal} {Faithfulness} with {Algorithmic} {Independence} of {Conditionals}},
+	volume = {23},
+	issn = {0924-6495, 1572-8641},
+	url = {https://link.springer.com/article/10.1007/s11023-012-9283-1},
+	doi = {10.1007/s11023-012-9283-1},
+	abstract = {Independence of Conditionals (IC) has recently been proposed as a basic rule for causal structure learning. If a Bayesian network represents the causal structure, its Conditional Probability Distributions (CPDs) should be algorithmically independent. In this paper we compare IC with causal faithfulness (FF), stating that only those conditional independences that are implied by the causal Markov condition hold true. The latter is a basic postulate in common approaches to causal structure learning. The common spirit of FF and IC is to reject causal graphs for which the joint distribution looks ‘non-generic’. The difference lies in the notion of genericity: FF sometimes rejects models just because one of the CPDs is simple, for instance if the CPD describes a deterministic relation. IC does not behave in this undesirable way. It only rejects a model when there is a non-generic relation between different CPDs although each CPD looks generic when considered separately. Moreover, it detects relations between CPDs that cannot be captured by conditional independences. IC therefore helps in distinguishing causal graphs that induce the same conditional independences (i.e., they belong to the same Markov equivalence class). The usual justification for FF implicitly assumes a prior that is a probability density on the parameter space. IC can be justified by Solomonoff’s universal prior, assigning non-zero probability to those points in parameter space that have a finite description. In this way, it favours simple CPDs, and therefore respects Occam’s razor. Since Kolmogorov complexity is uncomputable, IC is not directly applicable in practice. We argue that it is nevertheless helpful, since it has already served as inspiration and justification for novel causal inference algorithms.},
+	language = {en},
+	number = {2},
+	urldate = {2018-05-24},
+	journal = {Minds and Machines},
+	author = {Lemeire, Jan and Janzing, Dominik},
+	month = may,
+	year = {2013},
+	pages = {227--249},
+	file = {Full Text PDF:/home/users/u4533535/Zotero/storage/VSRYINKU/Lemeire and Janzing - 2013 - Replacing Causal Faithfulness with Algorithmic Ind.pdf:application/pdf;Snapshot:/home/users/u4533535/Zotero/storage/DCRU8TNB/s11023-012-9283-1.html:text/html}
+}
+
+
+@book{pearl_causality:_2009,
+	edition = {2},
+	title = {Causality: {Models}, {Reasoning} and {Inference}},
+	publisher = {Cambridge University Press},
+	author = {Pearl, Judea},
+	year = {2009}
+}
+
+
+
+@article{chickering_optimal_2003,
+	title = {Optimal {Structure} {Identification} with {Greedy} {Search}},
+	volume = {3},
+	issn = {1532-4435},
+	url = {https://doi.org/10.1162/153244303321897717},
+	doi = {10.1162/153244303321897717},
+	abstract = {In this paper we prove the so-called "Meek Conjecture". In particular, we show that if a DAG H is an independence map of another DAG G, then there exists a finite sequence of edge additions and covered edge reversals in G such that (1) after each edge modification H remains an independence map of G and (2) after all modifications G =H. As shown by Meek (1997), this result has an important consequence for Bayesian approaches to learning Bayesian networks from data: in the limit of large sample size, there exists a two-phase greedy search algorithm that---when applied to a particular sparsely-connected search space---provably identifies a perfect map of the generative distribution if that perfect map is a DAG. We provide a new implementation of the search space, using equivalence classes as states, for which all operators used in the greedy search can be scored efficiently using local functions of the nodes in the domain. Finally, using both synthetic and real-world datasets, we demonstrate that the two-phase greedy approach leads to good solutions when learning with finite sample sizes.},
+	urldate = {2018-02-27},
+	journal = {J. Mach. Learn. Res.},
+	author = {Chickering, David Maxwell},
+	month = mar,
+	year = {2003},
+	pages = {507--554},
+	annote = {It's possible to identify the "true" data-generating DAG in the infinite sample limit using a two-phase local search algorithm. This follows from the fact that it's possible to},
+	file = {ACM Full Text PDF:/home/users/u4533535/Zotero/storage/FIK5RCSU/Chickering - 2003 - Optimal Structure Identification with Greedy Searc.pdf:application/pdf}
+}
+
+
+@book{spirtes_causation_1993,
+	title = {Causation, {Prediction}, and {Search}},
+	volume = {81},
+	abstract = {What assumptions and methods allow us to turn observations into causal knowledge, and how can even incomplete causal knowledge be used in planning and prediction to influence and control our environment? In this book Peter Spirtes, Clark Glymour, and Richard Scheines address these questions using the formalism of Bayes networks, with results that have been applied in diverse areas of research in the social, behavioral, and physical sciences. The authors show that although experimental and observational study designs may not always permit the same inferences, they are subject to uniform principles. They axiomatize the connection between causal structure and probabilistic independence, explore several varieties of causal indistinguishability, formulate a theory of manipulation, and develop asymptotically reliable procedures for searching over equivalence classes of causal models, including models of categorical data and structural equation models with and without latent variables. The authors show that the relationship between causality and probability can also help to clarify such diverse topics in statistics as the comparative power of experimentation versus observation, Simpson's paradox, errors in regression models, retrospective versus prospective sampling, and variable selection. The second edition contains a new introduction and an extensive survey of advances and applications that have appeared since the first edition was published in 1993.},
+	author = {Spirtes, Peter and Glymour, Clark and Scheines, Richard},
+	month = jan,
+	year = {1993},
+	doi = {10.1007/978-1-4612-2748-9},
+	file = {Full Text PDF:/home/users/u4533535/Zotero/storage/Q5VT529X/Spirtes et al. - 1993 - Causation, Prediction, and Search.pdf:application/pdf}
+}
+
+
+@article{evans_margins_2015,
+	title = {Margins of discrete {Bayesian} networks},
+	url = {http://arxiv.org/abs/1501.02103},
+	abstract = {Bayesian network models with latent variables are widely used in statistics and machine learning. In this paper we provide a complete algebraic characterization of Bayesian network models with latent variables when the observed variables are discrete and no assumption is made about the state-space of the latent variables. We show that it is algebraically equivalent to the so-called nested Markov model, meaning that the two are the same up to inequality constraints on the joint probabilities. In particular these two models have the same dimension. The nested Markov model is therefore the best possible description of the latent variable model that avoids consideration of inequalities, which are extremely complicated in general. A consequence of this is that the constraint finding algorithm of Tian and Pearl (UAI 2002, pp519-527) is complete for finding equality constraints. Latent variable models suffer from difficulties of unidentifiable parameters and non-regular asymptotics; in contrast the nested Markov model is fully identifiable, represents a curved exponential family of known dimension, and can easily be fitted using an explicit parameterization.},
+	urldate = {2018-02-20},
+	journal = {arXiv:1501.02103 [math, stat]},
+	author = {Evans, Robin J.},
+	month = jan,
+	year = {2015},
+	note = {arXiv: 1501.02103},
+	keywords = {Mathematics - Statistics Theory, Statistics - Machine Learning},
+	annote = {Comment: 41 pages},
+	annote = {Shows that nested markov models have the same dimension as marginal DAGs, which model DAGs with hidden variables. Nested markov models furthermore respect all equality constraints of mDAGs, though mDAGs might respect further inequality constraints; Tian and Pearl (related) show how to derive these equality constraints},
+	file = {arXiv\:1501.02103 PDF:/home/users/u4533535/Zotero/storage/L9ALWTEB/Evans - 2015 - Margins of discrete Bayesian networks.pdf:application/pdf;arXiv.org Snapshot:/home/users/u4533535/Zotero/storage/ZAXBMMS3/1501.html:text/html}
+}
+
+
+@article{kang_inequality_2012,
+	title = {Inequality {Constraints} in {Causal} {Models} with {Hidden} {Variables}},
+	url = {http://arxiv.org/abs/1206.6829},
+	abstract = {We present a class of inequality constraints on the set of distributions induced by local interventions on variables governed by a causal Bayesian network, in which some of the variables remain unmeasured. We derive bounds on causal effects that are not directly measured in randomized experiments. We derive instrumental inequality type of constraints on nonexperimental distributions. The results have applications in testing causal models with observational or experimental data.},
+	urldate = {2018-02-20},
+	journal = {arXiv:1206.6829 [cs, stat]},
+	author = {Kang, Changsung and Tian, Jin},
+	month = jun,
+	year = {2012},
+	note = {arXiv: 1206.6829},
+	keywords = {Computer Science - Artificial Intelligence, Statistics - Methodology},
+	annote = {Comment: Appears in Proceedings of the Twenty-Second Conference on Uncertainty in Artificial Intelligence (UAI2006)},
+	file = {arXiv\:1206.6829 PDF:/home/users/u4533535/Zotero/storage/TBWYF3KN/Kang and Tian - 2012 - Inequality Constraints in Causal Models with Hidde.pdf:application/pdf;arXiv.org Snapshot:/home/users/u4533535/Zotero/storage/PNZ4JUK5/1206.html:text/html}
+}
+
+
+@article{yang_characterizing_2018,
+	title = {Characterizing and {Learning} {Equivalence} {Classes} of {Causal} {DAGs} under {Interventions}},
+	url = {http://arxiv.org/abs/1802.06310},
+	abstract = {We consider the problem of learning causal DAGs in the setting where both observational and interventional data is available. This setting is common in biology, where gene regulatory networks can be intervened on using chemical reagents or gene deletions. Hauser and B{\textbackslash}"uhlmann (2012) previously characterized the identifiability of causal DAGs under perfect interventions, which eliminate dependencies between targeted variables and their direct causes. In this paper, we extend these identifiability results to general interventions, which may modify the dependencies between targeted variables and their causes without eliminating them. We define and characterize the interventional Markov equivalence class that can be identified from general (not necessarily perfect) intervention experiments. We also propose the first provably consistent algorithm for learning DAGs in this setting and evaluate our algorithm on simulated and biological datasets.},
+	urldate = {2018-06-06},
+	journal = {arXiv:1802.06310 [math, stat]},
+	author = {Yang, Karren D. and Katcoff, Abigail and Uhler, Caroline},
+	month = feb,
+	year = {2018},
+	note = {arXiv: 1802.06310},
+	keywords = {Mathematics - Statistics Theory, Statistics - Applications, Statistics - Methodology},
+	annote = {Comment: 18 pages, 7 figures},
+	file = {arXiv\:1802.06310 PDF:/home/users/u4533535/Zotero/storage/QYBLHGF6/Yang et al. - 2018 - Characterizing and Learning Equivalence Classes of.pdf:application/pdf;arXiv.org Snapshot:/home/users/u4533535/Zotero/storage/9XLAKWAE/1802.html:text/html}
+}
+
+
+@article{hauser_characterization_2012,
+	title = {Characterization and {Greedy} {Learning} of {Interventional} {Markov} {Equivalence} {Classes} of {Directed} {Acyclic} {Graphs}},
+	volume = {13},
+	issn = {ISSN 1533-7928},
+	url = {http://www.jmlr.org/papers/v13/hauser12a.html},
+	number = {Aug},
+	urldate = {2018-06-06},
+	journal = {Journal of Machine Learning Research},
+	author = {Hauser, Alain and Bühlmann, Peter},
+	year = {2012},
+	pages = {2409--2464},
+	file = {Full Text PDF:/home/users/u4533535/Zotero/storage/AR23G9FQ/Hauser and Bühlmann - 2012 - Characterization and Greedy Learning of Interventi.pdf:application/pdf;Snapshot:/home/users/u4533535/Zotero/storage/25U334TM/hauser12a.html:text/html}
+}
+
+
+@article{meek_strong_2013,
+	title = {Strong {Completeness} and {Faithfulness} in {Bayesian} {Networks}},
+	url = {https://arxiv.org/abs/1302.4973},
+	language = {en},
+	urldate = {2018-05-21},
+	author = {Meek, Christopher},
+	month = feb,
+	year = {2013},
+	file = {Full Text PDF:/home/users/u4533535/Zotero/storage/4JIRGSD9/Meek - 2013 - Strong Completeness and Faithfulness in Bayesian N.pdf:application/pdf}
+}
+
+
+@article{peters_causal_2014,
+	title = {Causal {Discovery} with {Continuous} {Additive} {Noise} {Models}},
+	volume = {15},
+	issn = {1532-4435},
+	url = {http://dl.acm.org/citation.cfm?id=2627435.2670315},
+	abstract = {Loading...},
+	number = {1},
+	urldate = {2018-05-22},
+	journal = {J. Mach. Learn. Res.},
+	author = {Peters, Jonas and Mooij, Joris M. and Janzing, Dominik and Schölkopf, Bernhard},
+	month = jan,
+	year = {2014},
+	keywords = {additive noise, Bayesian networks, causal inference, causal minimality, identifiability, structural equation models},
+	pages = {2009--2053},
+	file = {ACM Full Text PDF:/home/users/u4533535/Zotero/storage/6DNIF3QP/Peters et al. - 2014 - Causal Discovery with Continuous Additive Noise Mo.pdf:application/pdf}
+}
