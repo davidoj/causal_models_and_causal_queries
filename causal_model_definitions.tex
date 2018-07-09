@@ -257,8 +257,10 @@ A corollary of this is that a probability distribution $P$ that is faithful to a
 
 In this section I propose a general definition of causal models and fit various existing definitions into this one.
 
-\begin{definition}[Causal model]
+\begin{definition}[Causal model]\label{def:causal_models}
 Given a set $\mathbf{V}$ of random variables and a set $\mathcal{I}$ of interventions, a causal model is a map $M:\mathcal{I}\to \mathcal{P}(\mathbf{V})$ where $\mathcal{P}(\mathbf{V})$ represents the set of all probability distributions over $\mathbf{V}$.
+
+The probability distribution $M(I)$ behaves for most purposes like the conditional $P(V|I)$, however the joint $P(V,I)$ does not necessarily exist. I will maintain the former notation for the time being for this reason.
 
 To reflect notation used in other literature, I will sometimes use $P_I$ to represent the probability distribution $M(I)$.
 \end{definition}
@@ -466,9 +468,9 @@ In case (3), consider $G''$ which identical to $G'$ except it has no edge betwee
 
 \text{Comment (minimality is necessary):} If we drop the requirement of minimality, choosing $G$ to be fully connected and dropping the graphical truncation rule will yield a graph that is Markov with respect to every $P_I\in\mathrm{Range}(M)$
 
-\subsection*{Other types of causal models}
+\subsection{Other types of causal models}
 
-\subsubsection*{Structural equation models}
+\subsubsection{Structural equation models}
 
 See Definition \ref{def:structural_equation} for a standard definition of structural equation models. 
 
@@ -499,7 +501,7 @@ Structural causal models so defined are CBNs \cite{pearl_causality:_2009}, but I
 One feature of structural causal models is the possibility to derive deterministic maps by substituting constants for the noise variables $u_i$. This could be seen as a generalisation of interventions from operations that replace the right hand side of an assignment with a constant to an operation that makes a more general modification to the right hand side of an assignment.
 
 
-\subsubsection*{Generalisation of CBNs}
+\subsubsection{Generalisation of CBNs}
 
 \textbf{CBN equivalence classes} In the context of \emph{causal discovery} (to be defined later), practitioners often deal with equivalence classes of CBNs under some equivalence relation $\sim$. A notable equivalence class is represented by \emph{completed partial directed acyclic graphs} (CPDAGS), which represent classes of CBNs that are faithful to a given set of conditional independences of $P_0$. CPDAGS are a type of chain graph, which combines directed and undirected edges \cite{spirtes_causation_1993}\cite{chickering_optimal_2003}.
 
