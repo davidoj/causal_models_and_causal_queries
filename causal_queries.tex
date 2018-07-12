@@ -24,6 +24,10 @@ Given a set of conditionals $P(X|\mathcal{I})$ with domain $X$ and interventions
 
 A causal policy (Def \ref{def:causal_query_2}) suggests the existence of an agent with an ability to conduct the interventions $\mathcal{I}$. However, definitions so far leave open the mechanism by which the agent can conduct such interventions. This is undesirable, as if the agent implements a policy using some mechanism $\mu_I$ to conduct intervention $I$, we might justifiably be concerned about whether $P(X|I,\mu_I)=P(X|I)$. This isn't just a theoretical concern - it is easy to come up with examples of situations where $P(X|I,do(I))\neq P(X|I,\neg do(I))$. If we add a node representing $\mu_I$ to the model, we might shift our concern to a potential metamechanism $\mu'_I$ and so forth. It might be intuitively obvious in many cases that we can stop when we reach a given level, but the lack of a formal account is unsatisfying.
 
+\begin{definition}[Causal optimization problem]\label{def:copt_prob}
+A causal optimization problem is a tuple $\langle \mathcal{I}, V, \mathcal{F}, m, C\rangle$. $V$ is a set of variables and $\mathcal{I}$ is a set of interventions and $V$ is a set of random variables. $\mathcal{F}$ is a set of functions $V\to \mathcal{I}$ and $m$ is a map $\mathcal{F}\to \mathcal{P}_{V\times \mathcal{I}}$, where $\mathcal{P}_{V\times \mathcal{I}}$ is a set of probability distributions on $V\times \mathcal{I}$. $C:V\times \mathcal{I} \to \mathbb{R}$ is a cost function.
+\end{definition}
+
 \subsection{Functional policy}
 
 My proposed solution is to incorporate a policy function into the world model. This demystifies what exactly "interventions" are - they are policy function outputs.
@@ -36,6 +40,11 @@ The functional policy is
     \Pi=\mathrm{argmin}_{f\in\mathcal{F}}\mathbb{E}_{m(f)}[C(x,I)]    \label{eq:func_cp}
 \end{align}
 \end{definition}
+
+As the codomain of the map $m$ is a space of probability distributions, I will use the notation
+\begin{align}
+    P_\Pi := m(\Pi)
+\end{align}
 
 Needs work: I think that the domain of functions in $\mathcal{F}$ should probably be restricted to things that happen before the function is computed. I'm reluctant to include time if it can be avoided, so leaving it as a note for now.
 
@@ -210,8 +219,89 @@ Suppose there is some set of ``plausible'' functions $\mathcal{H}=\{N\times I\to
 \end{align}
 Where $\langle\cdot\rangle$ denotes an average. If we suppose this also holds for $h(\cdot,1)$, then we can be confident that the subset of samples for which $r(i)=0$ will provide a good estimate for the distribution of $X_1$ under $f_0$, and the subset for which $r(i)=1$ will provide a good estimate for the distribution under $f_1$.
 
+\subsection{Identifiability}
 
+In the following discussion, define constant policies $\Pi_i:I\mapsto i$ and an arbitrary "observational" policy $\Pi_o$.
 
+In the Pearlean framework, the causal effect of $X$ on $Y$ is identifiable if $P_{\Pi_i}(y)=P(y|do(X=i))$ is able to be consistently estimated from infinite observational data for all $i$. Given a graph $G$ over vertices $V$ representing a CBN \ref{def:CBN} and a subset $X\subset V$, denote the graph deleting all outgoing edges of $X$ by $G_{\underline{X}}$ and the graph obtained by deleting all incoming edges to $X$ as $G_{\overline{X}}$.
+
+Under these assumptions, four conditions for the identifiability of $X$ on $Y$ are given that are claimed to be both necessary and sufficient. The faithfulness assumption is not mentioned in the reference, but I can provide an example of an identifiable effect where $P$ is minimial but not faithful to $G$ and the following conditions do not hold \cite{galles_testing_2013}. Recall definition \ref{def:dsep} for the points below:
+
+\begin{enumerate}
+    \item There is no path from $X$ to $Y$ in $G$
+    \item (No back-door path) $X\perp_{G_{\underline{X}}} Y$
+    \item (All back-door paths blocked) If $Z\subset V$ are observed, then $X\perp_{G_{\underline{X}}} Y|Z$
+    \item (``Front-door'' criterion) There exists $Z_1, Z_2 \subset V$ such that
+    \begin{itemize}
+        \item $Z_2\cap X =\varnothing$
+        \item $Z_1$ blocks all directed paths from $X$ to $Y$: $X \perp_{G_{\overline{X}}} Y | Z_1$
+        \item $Z_2$ blocks all back-door paths between $Z_1$ and $Y$ in $G_{\overline{X}}$: $Z_1 \perp_{G_{{\overline{X}}{\underline{Z_1}}}} Y | Z_2$
+        \item $Z_2$ blocks all back-door paths between $X$ and $Z_1$: $Z_1 \perp_{G_{{\underline{X}}}} X | Z_2$
+    \end{itemize}
+\end{enumerate}
+
+Recall that $d$-separation statements imply conditional independences in the associated probability distribution $P_\cdot$.
+
+The first three are sufficient for estimating $P_{\Pi_i}(y)$ from $P(y|I,z)$, while the fourth has a more complicated estimation procedure.
+
+In the Rubin Causal Model, the set of interventions considered is two-valued: $\mathcal{I}=\{0,1\}$. Rubin uses notation that considers finite sample effects and adds assumptions to ensure that we can derive IID samples from $P_{\Pi_0}$ and $P_{\Pi_1}$, which we will neglect. Rubin shows that the population average treatment effect $\mathbb{E}_{P_{\Pi_1}} [Y] - \mathbb{E}_{P_{\Pi_0}} [Y]$ can be calculated from samples from $P_{\Pi_o}(Y|I=0)$ and $P_{\Pi_o}(Y|I=1)$ provided \emph{ignorability} holds \cite{rubin_causal_2005}.
+
+To define ignorability properly, I'd need to define counterfactual quantities. For the moment I will use the following definition that I believe captures the same idea
+\begin{align}
+    P_{\Pi_o}(Y|Z,I=0) &= P_{\Pi_0}(Y|Z,I=0) \\
+    P_{\Pi_o}(Y|Z,I=1) &= P_{\Pi_1}(Y|Z,I=1)
+\end{align}
+
+Needs work: the difficulty is that counterfactuals posit a "true" value of $Y(1)$ - the outcome given the treatment. It seems \emph{reasonable} to interpret this as the value of $Y$ under a constant policy of $I\mapsto 1$, but it's not obvious that this is the only possible interpretation. The definition here does at least match Pearl's definition of counterfactuals.
+
+Pearl's identifiability condition is stronger than Rubin's. If we know $P_{\Pi_i}(y)$ for all $i\in \mathcal{I}$, then provided $P_{\Pi_i}$ has an expected value, we can trivially find $\mathbb{E}_{P_{\Pi_i}} [Y] - \mathbb{E}_{P_{\Pi_j}} [Y]$ for any $i,j\in\mathbb{R}$.
+
+Neither set of assumptions is strictly stronger than the other. (1)-(3) of the do-calculus identifiability imply ignorability, but (4) may hold when ignorability does not. On the other hand, given a graph where an unobserved variable $U$ is a parent of both $X$ and $Y$ (and hence violating the back-door criterion), we can propose a compatible probability distribution $P$ where ignorability holds due to intransitivity unfaithfulness at $U$ \ref{def:intrans_unfaith}.
+
+\textbf{Conjecture:} Rewriting (1)-(4) of the do-calculus conditions in terms of conditional independences rather than d-separation would render them necessary and sufficient to identify a causal effect.
+
+\subsubsection{Relationship between causal identification and cost minimisation}
+
+Both criteria for causal identification above consider only constant policies. Some questions arise:
+\begin{itemize}
+    \item Is causal identifiability along with the assumption that there is an optimal constant policy enough to enable the optimal policy to be found?
+    \item Is causal identifiability (or a modification of it) enough to enable an optimal non-constant policy to be found?
+\end{itemize}
+
+\subsubsection{Identifiability and constant policy cost minimisation}
+
+Suppose we have a causal optimization problem $\langle \mathcal{I}, V, \mathcal{F}, P_f, C\rangle$ where $\mathcal{F}$ is the set of constant functions $\Pi_i$ on $\mathcal{I}$. Let $Y\subset V\times\mathcal{I}$ be the set of variables on which $C$ is not constant. Then it is sufficient for the effect of $\mathcal{I}$ on $Y$ to be identifiable in the Pearlean sense for the optimal policy to be found (if it exists). Also sufficient is if the effect of $\mathcal{I}$ on $C(Y)$ to be identifiable.
+
+In both cases it is possible to evaluate the function $h(i):= E_{\Pi_i}[C(Y)]$ at every $i\in\mathcal{I}$, provided this expectation exists. If it is possible to minimize $h$ on $\mathcal{I}$, then an optimal policy can be found.
+
+Using Rubin's weaker definition of identifiability, it is necessary that the effect of $\mathcal{I}$ on $C(Y)$ be identifiable.
+
+\subsubsection{Identifiability and nonconstant policy cost minimisation}
+
+For reasons analogous to those above, if we admit non-constant policies $f:A\to I$ into consideration, it is sufficient to know $P_{f}(y|A=a)$ for all $f\in\mathcal{F}$.
+
+Suppose that the intervention $I$ has no causal effect on $A$. That is, $P_f (A) = P_{f'}(A)$ for any $f,f'\in\mathcal{F}$. This avoids issues of circular dependence, but it is an additional assumption, not a matter of necessity.
+
+If the above assumptions holds, $m$ is a CBN* and the effect of $I$ on $Y$ is identifiable, then the conditional effect of $I$ on $Y$ given $A$ is identifiable.
+
+\textbf{Proof sketch:} First, redo Definition \ref{def:CBN} with conditional interventions.
+
+Next, by parental adjustment, $P_*(y|\mathrm{pa}_Y)$ is constant for all policies $*$ provided $\mathrm{pa}_Y$ has nonzero probability under $\mathrm{pa}_Y$.  
+
+Define $\mathrm{ndp}^Y_I = \mathrm{pa}_Y\cap \mathrm{nd}_I$ and $\mathrm{dep}^Y_I=\mathrm{pa}_Y\cap \mathrm{de}_I$
+
+\begin{align}
+    P_*(y|a) &= \sum_{\mathrm{pa}_Y\setminus \{A\}} P_*(y|\mathrm{pa}_Y) P_*(\mathrm{pa}_Y\setminus\{A\}|a) \\
+    P_*(y|a) &= \sum_{\mathrm{pa}_Y\setminus \{A\}} P_*(y|\mathrm{pa}_Y) P_*(\mathrm{ndp}^Y_I|a) P_*(\mathrm{dep}^Y_I|\mathrm{ndp}^Y_I,a)
+\end{align}
+
+We can split $\mathrm{pa}_Y$ into $\mathrm{pa}_Y\cap \mathrm{de}_I$ and $\mathrm{pa}_Y\cap \mathrm{nd}_I$. $P_*(\mathrm{ndp}_I)$ can only depend on the policy via $a$, and so $P_*(\mathrm{ndp}_I)$ is fixed for all policies. By the assumption that $A\in\mathrm{nd}_I$,  $P_*(\mathrm{dep}^Y_I|\mathrm{ndp}^Y_I,a)$ depends only on the policy via $I$.
+
+Therefore $P_f(y|a)=P_{f'}(y|a)$ for all $f,f'$ such that $f(a)=f'(a)$.
+
+If the effect of $I$ on $Y$ is identifiable, then we know $P_{\Pi_i}(y|a)$ for all constant policies $\Pi_i$. We can therefore compute $P_f(y|a)$ for non-constant $f$ by evaluating the constant policy $P_{\Pi_{f(a)}}(y|a)$ at every value of $a$.
+
+*Needs to be an extended CBN with non-constant interventions
 
 % \subsection{Recovering a model-selection rule}
 

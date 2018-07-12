@@ -30,7 +30,7 @@ A head to head or collider node $V_{h}$ in a path $p$ is a node where the two ad
 A path $p$ is blocked by a set $S\subset V$ iff $p$ contains a node that is not a head-to-head node that is also in $S$, or if $p$ contains a head-to-head node which is itself in $S$ or has a descendent in $S$.
 \end{definition}
 
-\begin{definition}[d-separation]
+\begin{definition}[d-separation]\label{def:dsep}
 Two sets of nodes $A,B\subset V$ are d-separated in $G$ by $S\subset V$ iff every path starting with a node $A_i\in A$ and ending with a node $B_i\in B$ is blocked by $S$. We write this relation $A \perp_G B | S$.
 \end{definition}
 
@@ -109,6 +109,31 @@ A graphical model of a Markovian probability distribution over random variables 
 \[V_i\not\CI p|\mathrm{Parents}(V_i)\setminus p\]
 \end{definition}
 
+\subsection{Types of unfaithfulness}
+
+Shurz and Gerbharter detail the following types of unfaithfulness \cite{schurz_causality_2016}. It is not claimed to be an exhaustive typology, but it is helpful to discuss where different types of unfaithfulness can arise.
+
+\begin{definition}[Cancellation unfaithfulness]
+
+\end{definition}
+
+\begin{definition}[Determinism unfaithfulness]
+
+\end{definition}
+
+\begin{definition}[Intransitiviey unfaithfulness]\label{def:intrans_unfaith}
+
+\end{definition}
+
+Ramsey offers the following exhaustive typology of faithfulness \cite{ramsey_adjacency-faithfulness_2012}. This breakdown is useful for constructing algorithms, as while adjacency faithfulness is not testable, orientation faithfulness is.
+
+\begin{definition}[Adjacency faithfulness]
+
+\end{definition}
+
+\begin{definition}[Orientation faithfulness]
+
+\end{definition}
 
 \subsection{Directed Markov properties}
 
@@ -348,7 +373,7 @@ The space of permissible interventions for a CBN is $\mathcal{I} := I_0\cup \lef
 For an intervention $I_U = \cup_{i\in U} I_{i}$, we call the set $V_U = \{V_i|i\in U\}$ the target variables.
 \end{definition}
 
-\begin{definition}[Causal Bayesian Network]
+\begin{definition}[Causal Bayesian Network]\label{def:CBN}
 Consider the set of interventions $\mathcal{I}$ and a causal model $M:\mathcal{I}\to\mathcal{P}$ over random variables $V$, and write $P_A=M(I_A)$. $M$ is a Causal Bayesian Network if
 \begin{enumerate}
     \item There is some cause-effect graph $G=(V,E)$ such that $M$ is Markovian relative to $G$ and
