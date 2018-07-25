@@ -1,307 +1,542 @@
 \section{Causal Policies}
 
-A proposed general framework for decision-theoretic causal queries:
+% A proposed general framework for decision-theoretic causal queries:
 
-% \begin{definition}[Causal model query]\label{def:causal_query_1}
-% Given complete dataset $D$ over domain $V$ and a sample $S\subset D$, a class of causal models $\mathcal{M}$ and a $D$-dependent loss $\mathcal{L}_D:\mathcal{M}\to \mathbb{R}$, using the sample $S$ find a model $M\in \mathcal{M}$ minimising $\mathcal{L}_D$?
+% % \begin{definition}[Causal model query]\label{def:causal_query_1}
+% % Given complete dataset $D$ over domain $V$ and a sample $S\subset D$, a class of causal models $\mathcal{M}$ and a $D$-dependent loss $\mathcal{L}_D:\mathcal{M}\to \mathbb{R}$, using the sample $S$ find a model $M\in \mathcal{M}$ minimising $\mathcal{L}_D$?
+% % \end{definition}
+
+% % Thinking aloud: given a distinction between intervention and other variables $V=X\times \mathcal{I}$, the causal model defined in \ref{def:causal_models} explicitly avoids requiring a marginal distribution $P(\mathcal{I})$, though the conditional $P(X|\mathcal{I}=I)=M(I)$ exists.
+
+% % On the other hand, given a complete dataset $D$, $P(\mathcal{I})$ will exist and $\mathcal{L}_D$ will depend on it. It seems undesirable for a causal query to depend on the selection of intervention.
+
+% % Try stepping up a level of generality:
+
+% % Let $\mathcal{I}$ be an arbitrary set of interventions. If we imagine a robot interacting with the world, we can think of $\mathcal{I}$ as the set of all possible signals the robot could send to its actuators. We will later discuss when it makes sense to consider particular types of intervention such as $do$-type interventions.
+
+% Define the collection of conditionals $P(X|\mathcal{I})=\{P(X|I)|I\in\mathcal{I}\}$.
+
+% \begin{definition}[Causal policy]\label{def:causal_query_2}
+% Given a set of conditionals $P(X|\mathcal{I})$ with domain $X$ and interventions $\mathcal{I}$ and a cost function $C:X\times\mathcal{I}\to\mathbb{R}$ find $I$ minimising $\mathbb{E}_{P(X|I)}[C(X,I)]$. The resulting $I$ is the \emph{causal policy}
 % \end{definition}
 
-% Thinking aloud: given a distinction between intervention and other variables $V=X\times \mathcal{I}$, the causal model defined in \ref{def:causal_models} explicitly avoids requiring a marginal distribution $P(\mathcal{I})$, though the conditional $P(X|\mathcal{I}=I)=M(I)$ exists.
+% \subsection{Problems with causal policies}\label{ssec:prob_causal_policy}
 
-% On the other hand, given a complete dataset $D$, $P(\mathcal{I})$ will exist and $\mathcal{L}_D$ will depend on it. It seems undesirable for a causal query to depend on the selection of intervention.
+% A causal policy (Def \ref{def:causal_query_2}) suggests the existence of an agent with an ability to conduct the interventions $\mathcal{I}$. However, definitions so far leave open the mechanism by which the agent can conduct such interventions. This is undesirable, as if the agent implements a policy using some mechanism $\mu_I$ to conduct intervention $I$, we might justifiably be concerned about whether $P(X|I,\mu_I)=P(X|I)$. This isn't just a theoretical concern - it is easy to come up with examples of situations where $P(X|I,do(I))\neq P(X|I,\neg do(I))$. If we add a node representing $\mu_I$ to the model, we might shift our concern to a potential metamechanism $\mu'_I$ and so forth. It might be intuitively obvious in many cases that we can stop when we reach a given level, but the lack of a formal account is unsatisfying.
 
-% Try stepping up a level of generality:
+% \begin{definition}[Causal optimization problem]\label{def:copt_prob}
+% A causal optimization problem is a tuple $\langle \mathcal{I}, V, \mathcal{F}, m, C\rangle$. $V$ is a set of variables and $\mathcal{I}$ is a set of interventions and $V$ is a set of random variables. $\mathcal{F}$ is a set of functions $V\to \mathcal{I}$ and $m$ is a map $\mathcal{F}\to \mathcal{P}_{V\times \mathcal{I}}$, where $\mathcal{P}_{V\times \mathcal{I}}$ is a set of probability distributions on $V\times \mathcal{I}$. $C:V\times \mathcal{I} \to \mathbb{R}$ is a cost function.
+% \end{definition}
 
-% Let $\mathcal{I}$ be an arbitrary set of interventions. If we imagine a robot interacting with the world, we can think of $\mathcal{I}$ as the set of all possible signals the robot could send to its actuators. We will later discuss when it makes sense to consider particular types of intervention such as $do$-type interventions.
+% \subsection{Functional policy}
 
-Define the collection of conditionals $P(X|\mathcal{I})=\{P(X|I)|I\in\mathcal{I}\}$.
+% My proposed solution is to incorporate a policy function into the world model. This demystifies what exactly "interventions" are - they are policy function outputs.
 
-\begin{definition}[Causal policy]\label{def:causal_query_2}
-Given a set of conditionals $P(X|\mathcal{I})$ with domain $X$ and interventions $\mathcal{I}$ and a cost function $C:X\times\mathcal{I}\to\mathbb{R}$ find $I$ minimising $\mathbb{E}_{P(X|I)}[C(X,I)]$. The resulting $I$ is the \emph{causal policy}
-\end{definition}
+% \begin{definition}[Functional policy]\label{def:fp_cpq}
+% Suppose we have a domain $X\times\mathcal{I}$, a set of candidate policies $\mathcal{F}:\{X\to \mathcal{I}\}$, a map $m:\mathcal{F}\to \mathcal{P}$ where $\mathcal{P}$ is the space of probability distributions over $X\times\mathcal{I}$ and a cost function $C:X\times\mathcal{I}\to \mathbb{R}$.
 
-\subsection{Problems with causal policies}\label{ssec:prob_causal_policy}
+% The functional policy is
+% \begin{align}
+%     \Pi=\mathrm{argmin}_{f\in\mathcal{F}}\mathbb{E}_{m(f)}[C(x,I)]    \label{eq:func_cp}
+% \end{align}
+% \end{definition}
 
-A causal policy (Def \ref{def:causal_query_2}) suggests the existence of an agent with an ability to conduct the interventions $\mathcal{I}$. However, definitions so far leave open the mechanism by which the agent can conduct such interventions. This is undesirable, as if the agent implements a policy using some mechanism $\mu_I$ to conduct intervention $I$, we might justifiably be concerned about whether $P(X|I,\mu_I)=P(X|I)$. This isn't just a theoretical concern - it is easy to come up with examples of situations where $P(X|I,do(I))\neq P(X|I,\neg do(I))$. If we add a node representing $\mu_I$ to the model, we might shift our concern to a potential metamechanism $\mu'_I$ and so forth. It might be intuitively obvious in many cases that we can stop when we reach a given level, but the lack of a formal account is unsatisfying.
+% As the codomain of the map $m$ is a space of probability distributions, I will use the notation
+% \begin{align}
+%     P_\Pi := m(\Pi)
+% \end{align}
 
-\begin{definition}[Causal optimization problem]\label{def:copt_prob}
-A causal optimization problem is a tuple $\langle \mathcal{I}, V, \mathcal{F}, m, C\rangle$. $V$ is a set of variables and $\mathcal{I}$ is a set of interventions and $V$ is a set of random variables. $\mathcal{F}$ is a set of functions $V\to \mathcal{I}$ and $m$ is a map $\mathcal{F}\to \mathcal{P}_{V\times \mathcal{I}}$, where $\mathcal{P}_{V\times \mathcal{I}}$ is a set of probability distributions on $V\times \mathcal{I}$. $C:V\times \mathcal{I} \to \mathbb{R}$ is a cost function.
-\end{definition}
+% Needs work: I think that the domain of functions in $\mathcal{F}$ should probably be restricted to things that happen before the function is computed. I'm reluctant to include time if it can be avoided, so leaving it as a note for now.
 
-\subsection{Functional policy}
+% Definition \ref{def:fp_cpq} is motivated by the following consideration: Suppose we have a true set of conditionals $P^*(X|\mathcal{I})=\{P^*(X|I):\forall I \in \mathcal{I}\}$. Deducing a policy from \ref{def:causal_query_2} using the model $P(X|\mathcal{I})=P^*(X|\mathcal{I})$ is not sufficient to ensure the chosen policy is actually optimal because we haven't specified a model of how the agent interacts with $\mathcal{I}$. Suppose, instead, we have a map $m^*:\mathcal{F}\to\mathcal{P}$ that is true for all $f\in\mathcal{F}$ and derive an optimal policy $\Pi\in\mathcal{F}$ following \ref{def:fp_cpq} with $m=m^*$. This is sufficient to ensure that $\Pi$ is superior to all other policies in $\mathcal{F}$.
 
-My proposed solution is to incorporate a policy function into the world model. This demystifies what exactly "interventions" are - they are policy function outputs.
+% % \begin{remark}
+% % If the set of distributions $\mathcal{P}$ are able to be represented by structural equation models, all variables are functions of other variables in the model. Intervention variables are then distinguished only by the freedom to choose which function computes them.
+% % \end{remark}
 
-\begin{definition}[Functional policy]\label{def:fp_cpq}
-Suppose we have a domain $X\times\mathcal{I}$, a set of candidate policies $\mathcal{F}:\{X\to \mathcal{I}\}$, a map $m:\mathcal{F}\to \mathcal{P}$ where $\mathcal{P}$ is the space of probability distributions over $X\times\mathcal{I}$ and a cost function $C:X\times\mathcal{I}\to \mathbb{R}$.
 
-The functional policy is
-\begin{align}
-    \Pi=\mathrm{argmin}_{f\in\mathcal{F}}\mathbb{E}_{m(f)}[C(x,I)]    \label{eq:func_cp}
-\end{align}
-\end{definition}
+% \subsubsection{Self-optimisation}\label{sssec:self_reflection}
 
-As the codomain of the map $m$ is a space of probability distributions, I will use the notation
-\begin{align}
-    P_\Pi := m(\Pi)
-\end{align}
+% Finding an optimal policy via Definition \ref{def:fp_cpq} is itself the application of a map $Q:\{\mathcal{F}\}\times\{\mathcal{F}\to\mathcal{P}\}\times\{\mathcal{I}\to\mathbb{R}\}\to\{X\to\mathcal{I}\}$ such that $Q(\mathcal{F},m,C)=\Pi$ (with symbols defined as above). 
 
-Needs work: I think that the domain of functions in $\mathcal{F}$ should probably be restricted to things that happen before the function is computed. I'm reluctant to include time if it can be avoided, so leaving it as a note for now.
+% Introducing a map $G\{X\to X\to \mathcal{I}\} \to \{X\to\mathcal{I}\}$, $G(Q)$ is itself a policy - in fact it is the policy actually implemented by the agent, while the idealised $\Pi:=Q(X)$ will, in general, forget some of the inputs of $G(Q)$. 
 
-Definition \ref{def:fp_cpq} is motivated by the following consideration: Suppose we have a true set of conditionals $P^*(X|\mathcal{I})=\{P^*(X|I):\forall I \in \mathcal{I}\}$. Deducing a policy from \ref{def:causal_query_2} using the model $P(X|\mathcal{I})=P^*(X|\mathcal{I})$ is not sufficient to ensure the chosen policy is actually optimal because we haven't specified a model of how the agent interacts with $\mathcal{I}$. Suppose, instead, we have a map $m^*:\mathcal{F}\to\mathcal{P}$ that is true for all $f\in\mathcal{F}$ and derive an optimal policy $\Pi\in\mathcal{F}$ following \ref{def:fp_cpq} with $m=m^*$. This is sufficient to ensure that $\Pi$ is superior to all other policies in $\mathcal{F}$.
+% It is interesting to ask whether it is possible to set the optimisation problem up so that $\Pi=G(Q)$, and what implications this might have. To do so, we must ensure that $G(Q)\in\mathcal{F}$, and so we must augment the domain $X$ with variables representing $\mathcal{F}$,$m$ and $C$.
+
+% Needs work: the fact that the model $m$ must contain a representation of itself is suggestive of an incomputability result. Is there such a result here?
+
+% Needs work: Generally, when is it possible to take a policy $\Pi_1:X\to\mathcal{I}$ and produce a simplified policy $\Pi_2:C\to\mathcal{I}$ where $C\subset X$ which achieves the same cost?
+
+
+% \subsection{Functional policies in Bayesian Networks}
+
+% The definitions above do not require the probability distributions $\mathcal{P}$ be Markovian. However, Markovian distributions permit easy representation of conditional independence with graphical models, so they make a good basis from which to generate examples.
+
+% We will follow the custom of labeling nodes in a graphical model with the output of the function represented by the node, so the policy node will be labeled $I$.
+
+% We will also neglect any subtleties raised by section \ref{sssec:self_reflection}.
+
+% Needs work: the inclusion of a policy function suggests that $I$ may be locally Markovian with respect to the inputs to the policy function. Need to check the exact characteristics WRT Markovianity.
+
+% \subsubsection{Simple case}\label{sssec:simple_case}
+
+% Let $\mathcal{I},X=\{0,1\}$ and $C(x,I)=x$.
+
+% \begin{center}
+% \begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+% semithick ,
+% state/.style ={ circle ,top color =white ,
+% draw , text=blue , minimum width =1 cm}]
+% \node[state] (A) [left] {$I$};
+% \node[state] (B) [right = of A] {$X$};
+% \path (A) edge [] node[above] {} (B);
+% \end{tikzpicture}
+% \end{center}
+
+% We will partially define the probability distribution with the following structural equation:
+% \begin{align*}
+%     X:=I
+% \end{align*}
+% Choosing a function that computes $I$ will complete the definition.
+
+% Given the dependences indicated, we have as $\mathcal{F}$ the set of constant functions on $\mathcal{I}$. Of these, $I\mapsto0$ minimises $C$.
+
+% In this simple case, finding the functional policy reduces to finding the best intervention. 
+
+% \subsubsection{Additional dependence}
+
+% Let $\mathcal{I},X_1,X_2=\{0,1\}$ and $C(x_1,x_2,I)=x_1$. Suppose $X_2$ is observed before $I$ is computed, so it is a potential input of the policy.
+
+% \begin{center}
+% \begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+% semithick ,
+% state/.style ={ circle ,top color =white ,
+% draw , text=blue , minimum width =1 cm}]
+% \node[state] (B) [right] {$X_1$};
+% \node[state] (A) [above left = 1cm and 3cm of B] {$X_2$};
+% \node[state] (C) [below left = 1cm and 3cm of B] {$I$};
+% \path (A) edge [] node[above] {} (B);
+% \path (C) edge [] node[above] {} (B);
+% \draw[dashed] (A) -- (C);
+% \end{tikzpicture}
+% \end{center}
+
+% We will partially define the distribution with:
+% \begin{align*}
+%     X_1 := \mathrm{XOR}(I,X_2)
+% \end{align*}
+
+% We could consider policies that are constant on $\{0,1\}$, or maps $\{0,1\}\to\{0,1\}$. Clearly in this case we want $\Pi:I\mapsto X_2$. If we further knew that $P(X_2=0)=1$, then the constant policy $f:I\mapsto 0$ would perform equally well.
 
 % \begin{remark}
-% If the set of distributions $\mathcal{P}$ are able to be represented by structural equation models, all variables are functions of other variables in the model. Intervention variables are then distinguished only by the freedom to choose which function computes them.
+% The optimal policy isn't straightforward to derive using Causal Bayesian Networks. If we consider the setup above where we are permitted to conduct interventions on the node labeled by $I$, under the standard definition of intervention we would assume that it cuts off any dependence of $I$ on $X_2$. This would limit us to what are here described as constant policies, which are not in general optimal. 
+
+% We could address this by proposing that $do()$-interventions could depend on the value of $X_2$ even if $I$ does not depend on it directly. This would invalidate some properties of Causal Bayesian Networks.
 % \end{remark}
 
+% \begin{remark}
+% If the policy depends on $X_2$, we never need to know the full probability distribution to find the optimal policy.
+% \end{remark}
 
-\subsubsection{Self-optimisation}\label{sssec:self_reflection}
+% \subsubsection{Hidden dependence}
+% Let $\mathcal{I},X_1,X_2=\{0,1\}$ and $C(x_1,x_2,I)=x_1$. Suppose $X_2$ is not observed.
 
-Finding an optimal policy via Definition \ref{def:fp_cpq} is itself the application of a map $Q:\{\mathcal{F}\}\times\{\mathcal{F}\to\mathcal{P}\}\times\{\mathcal{I}\to\mathbb{R}\}\to\{X\to\mathcal{I}\}$ such that $Q(\mathcal{F},m,C)=\Pi$ (with symbols defined as above). 
+% \begin{center}
+% \begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+% semithick ,
+% state/.style ={ circle ,top color =white ,
+% draw , text=blue , minimum width =1 cm}]
+% \node[state] (B) [right] {$X_1$};
+% \node[state,dashed] (A) [above left = 1cm and 3cm of B] {$X_2$};
+% \node[state] (C) [below left = 1cm and 3cm of B] {$I$};
+% \path (C) edge [] node[above] {} (B);
+% \draw[dashed] (A) -- (B);
+% \end{tikzpicture}
+% \end{center}
 
-Introducing a map $G\{X\to X\to \mathcal{I}\} \to \{X\to\mathcal{I}\}$, $G(Q)$ is itself a policy - in fact it is the policy actually implemented by the agent, while the idealised $\Pi:=Q(X)$ will, in general, forget some of the inputs of $G(Q)$. 
+% We will assume the following structural equations
+% \begin{align*}
+%     X_2 &:= \mu_{X_2}\\
+%     X_1 &:= \mathrm{XOR}(I,X_2)
+% \end{align*}
+% Where $\mu_{X_2}\sim \mathrm{Bernoulli}(0.2)$.
 
-It is interesting to ask whether it is possible to set the optimisation problem up so that $\Pi=G(Q)$, and what implications this might have. To do so, we must ensure that $G(Q)\in\mathcal{F}$, and so we must augment the domain $X$ with variables representing $\mathcal{F}$,$m$ and $C$.
+% In this case, the problem appears to be identical to a problem with the dependence structure of \ref{sssec:simple_case}, and the optimal policy is constant $\Pi:I\mapsto 1$.
 
-Needs work: the fact that the model $m$ must contain a representation of itself is suggestive of an incomputability result. Is there such a result here?
+% \subsubsection{Confounded observations}
+% Let $\mathcal{I},X_2=\{0,1\}$, $X_1=\{0,1,2\}$ and $C(x_1,x_2,I)=x_1$. Suppose $X_2$ is not observed.
 
-Needs work: Generally, when is it possible to take a policy $\Pi_1:X\to\mathcal{I}$ and produce a simplified policy $\Pi_2:C\to\mathcal{I}$ where $C\subset X$ which achieves the same cost?
+% Suppose also that we make infinite observations under some fixed policy $f$, and we are then free to impose our preferred policy $\Pi$.
 
+% \begin{center}
+% \begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+% semithick ,
+% state/.style ={ circle ,top color =white ,
+% draw , text=blue , minimum width =1 cm}]
+% \node[state] (B) [right] {$X_1$};
+% \node[state,dashed] (A) [above left = 1cm and 3cm of B] {$X_2$};
+% \node[state] (C) [below left = 1cm and 3cm of B] {$I$};
+% \path (C) edge [] node[above] {} (B);
+% \draw[dashed] (A) -- (B);
+% \draw (A) -- (C);
+% \end{tikzpicture}
+% \end{center}
 
-\subsection{Functional policies in Bayesian Networks}
+% We will assume the following structural equations
+% \begin{align*}
+%     X_2 &:= \mu_{X_2}\\
+%     X_1 &:= \neg I + X_2 \\
+%     f   &:= X_2
+% \end{align*}
+% Where $\mu_{X_2}\sim \mathrm{Bernoulli}(0.2)$.
 
-The definitions above do not require the probability distributions $\mathcal{P}$ be Markovian. However, Markovian distributions permit easy representation of conditional independence with graphical models, so they make a good basis from which to generate examples.
+% The optimal policy will be $\Pi:I\mapsto 0$, but from our observations it will appear that $X_1 \CI I$ which would suggest that $\Pi$ is no better than the alternative.
 
-We will follow the custom of labeling nodes in a graphical model with the output of the function represented by the node, so the policy node will be labeled $I$.
+% \subsubsection{Randomisation}
+% Let $\mathcal{I}\{0,1\}$, $X_1=\{0,1,2\}$, $N=\{0,1,..,i,..,n\}$ and $C(x_1,i,I)=x_1$. Suppose $X_2$ is not observed.
 
-We will also neglect any subtleties raised by section \ref{sssec:self_reflection}.
+% We wish to estimate the distribution of $X_1$ under fixed policies $f_0:I\mapsto 0$ and $f_1:I\mapsto 1$, and we can sample the system $n$ times. In order to do this, we will in fact be sampling under the policy $r:N\mapsto \{0,1\}$.
 
-Needs work: the inclusion of a policy function suggests that $I$ may be locally Markovian with respect to the inputs to the policy function. Need to check the exact characteristics WRT Markovianity.
+% \begin{center}
+% \begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+% semithick ,
+% state/.style ={ circle ,top color =white ,
+% draw , text=blue , minimum width =1 cm}]
+% \node[state] (B) [right] {$X_1$};
+% \node[state,dashed] (A) [above left = 1cm and 3cm of B] {$N$};
+% \node[state] (C) [below left = 1cm and 3cm of B] {$I$};
+% \path (C) edge [] node[above] {} (B);
+% \draw[dashed] (A) -- (B);
+% \draw (A) -- (C);
+% \end{tikzpicture}
+% \end{center}
 
-\subsubsection{Simple case}\label{sssec:simple_case}
+% The dependence structure is identical to the previous section, which showed that in general it isn't possible to deduce the optimal policy from these observations. The difference is that we are free to choose $r$.
 
-Let $\mathcal{I},X=\{0,1\}$ and $C(x,I)=x$.
+% Suppose there is some set of ``plausible'' functions $\mathcal{H}=\{N\times I\to X_1\}$. If we choose $f'$ such that 
+% \begin{align}
+%     \max_{h\in\mathcal{H}} \left| \langle \{h(i,0):r(i)=0\}\rangle - \langle \{h(i,0):i\in\{n\}\} \rangle \right| < \epsilon \label{eq:bin_random}
+% \end{align}
+% Where $\langle\cdot\rangle$ denotes an average. If we suppose this also holds for $h(\cdot,1)$, then we can be confident that the subset of samples for which $r(i)=0$ will provide a good estimate for the distribution of $X_1$ under $f_0$, and the subset for which $r(i)=1$ will provide a good estimate for the distribution under $f_1$.
 
-\begin{center}
-\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
-semithick ,
-state/.style ={ circle ,top color =white ,
-draw , text=blue , minimum width =1 cm}]
-\node[state] (A) [left] {$I$};
-\node[state] (B) [right = of A] {$X$};
-\path (A) edge [] node[above] {} (B);
-\end{tikzpicture}
-\end{center}
+% \subsection{Identifiability}
 
-We will partially define the probability distribution with the following structural equation:
-\begin{align*}
-    X:=I
-\end{align*}
-Choosing a function that computes $I$ will complete the definition.
+% In the following discussion, define constant policies $\Pi_i:I\mapsto i$ and an arbitrary "observational" policy $\Pi_o$.
 
-Given the dependences indicated, we have as $\mathcal{F}$ the set of constant functions on $\mathcal{I}$. Of these, $I\mapsto0$ minimises $C$.
+% In the Pearlean framework, the causal effect of $X$ on $Y$ is identifiable if $P_{\Pi_i}(y)=P(y|do(X=i))$ is able to be consistently estimated from infinite observational data for all $i$. Given a graph $G$ over vertices $V$ representing a CBN \ref{def:CBN} and a subset $X\subset V$, denote the graph deleting all outgoing edges of $X$ by $G_{\underline{X}}$ and the graph obtained by deleting all incoming edges to $X$ as $G_{\overline{X}}$.
 
-In this simple case, finding the functional policy reduces to finding the best intervention. 
+% Under these assumptions, four conditions for the identifiability of $X$ on $Y$ are given that are claimed to be both necessary and sufficient. The faithfulness assumption is not mentioned in the reference, but I can provide an example of an identifiable effect where $P$ is minimial but not faithful to $G$ and the following conditions do not hold \cite{galles_testing_2013}. Recall definition \ref{def:dsep} for the points below:
 
-\subsubsection{Additional dependence}
+% \begin{enumerate}
+%     \item There is no path from $X$ to $Y$ in $G$
+%     \item (No back-door path) $X\perp_{G_{\underline{X}}} Y$
+%     \item (All back-door paths blocked) If $Z\subset V$ are observed, then $X\perp_{G_{\underline{X}}} Y|Z$
+%     \item (``Front-door'' criterion) There exists $Z_1, Z_2 \subset V$ such that
+%     \begin{itemize}
+%         \item $Z_2\cap X =\varnothing$
+%         \item $Z_1$ blocks all directed paths from $X$ to $Y$: $X \perp_{G_{\overline{X}}} Y | Z_1$
+%         \item $Z_2$ blocks all back-door paths between $Z_1$ and $Y$ in $G_{\overline{X}}$: $Z_1 \perp_{G_{{\overline{X}}{\underline{Z_1}}}} Y | Z_2$
+%         \item $Z_2$ blocks all back-door paths between $X$ and $Z_1$: $Z_1 \perp_{G_{{\underline{X}}}} X | Z_2$
+%     \end{itemize}
+% \end{enumerate}
 
-Let $\mathcal{I},X_1,X_2=\{0,1\}$ and $C(x_1,x_2,I)=x_1$. Suppose $X_2$ is observed before $I$ is computed, so it is a potential input of the policy.
+% Recall that $d$-separation statements imply conditional independences in the associated probability distribution $P_\cdot$.
 
-\begin{center}
-\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
-semithick ,
-state/.style ={ circle ,top color =white ,
-draw , text=blue , minimum width =1 cm}]
-\node[state] (B) [right] {$X_1$};
-\node[state] (A) [above left = 1cm and 3cm of B] {$X_2$};
-\node[state] (C) [below left = 1cm and 3cm of B] {$I$};
-\path (A) edge [] node[above] {} (B);
-\path (C) edge [] node[above] {} (B);
-\draw[dashed] (A) -- (C);
-\end{tikzpicture}
-\end{center}
+% The first three are sufficient for estimating $P_{\Pi_i}(y)$ from $P(y|I,z)$, while the fourth has a more complicated estimation procedure.
 
-We will partially define the distribution with:
-\begin{align*}
-    X_1 := \mathrm{XOR}(I,X_2)
-\end{align*}
+% In the Rubin Causal Model, the set of interventions considered is two-valued: $\mathcal{I}=\{0,1\}$. Rubin uses notation that considers finite sample effects and adds assumptions to ensure that we can derive IID samples from $P_{\Pi_0}$ and $P_{\Pi_1}$, which we will neglect. Rubin shows that the population average treatment effect $\mathbb{E}_{P_{\Pi_1}} [Y] - \mathbb{E}_{P_{\Pi_0}} [Y]$ can be calculated from samples from $P_{\Pi_o}(Y|I=0)$ and $P_{\Pi_o}(Y|I=1)$ provided \emph{ignorability} holds \cite{rubin_causal_2005}.
 
-We could consider policies that are constant on $\{0,1\}$, or maps $\{0,1\}\to\{0,1\}$. Clearly in this case we want $\Pi:I\mapsto X_2$. If we further knew that $P(X_2=0)=1$, then the constant policy $f:I\mapsto 0$ would perform equally well.
+% To define ignorability properly, I'd need to define counterfactual quantities. For the moment I will use the following definition that I believe captures the same idea
+% \begin{align}
+%     P_{\Pi_o}(Y|Z,I=0) &= P_{\Pi_0}(Y|Z,I=0) \\
+%     P_{\Pi_o}(Y|Z,I=1) &= P_{\Pi_1}(Y|Z,I=1)
+% \end{align}
+
+% Needs work: the difficulty is that counterfactuals posit a "true" value of $Y(1)$ - the outcome given the treatment. It seems \emph{reasonable} to interpret this as the value of $Y$ under a constant policy of $I\mapsto 1$, but it's not obvious that this is the only possible interpretation. The definition here does at least match Pearl's definition of counterfactuals.
+
+% Pearl's identifiability condition is stronger than Rubin's. If we know $P_{\Pi_i}(y)$ for all $i\in \mathcal{I}$, then provided $P_{\Pi_i}$ has an expected value, we can trivially find $\mathbb{E}_{P_{\Pi_i}} [Y] - \mathbb{E}_{P_{\Pi_j}} [Y]$ for any $i,j\in\mathbb{R}$.
+
+% Neither set of assumptions is strictly stronger than the other. (1)-(3) of the do-calculus identifiability imply ignorability, but (4) may hold when ignorability does not. On the other hand, given a graph where an unobserved variable $U$ is a parent of both $X$ and $Y$ (and hence violating the back-door criterion), we can propose a compatible probability distribution $P$ where ignorability holds due to intransitivity unfaithfulness at $U$ \ref{def:intrans_unfaith}.
+
+% \textbf{Conjecture:} Rewriting (1)-(4) of the do-calculus conditions in terms of conditional independences rather than d-separation would render them necessary and sufficient to identify a causal effect.
+
+% \subsubsection{Relationship between causal identification and cost minimisation}
+
+% Both criteria for causal identification above consider only constant policies. Some questions arise:
+% \begin{itemize}
+%     \item Is causal identifiability along with the assumption that there is an optimal constant policy enough to enable the optimal policy to be found?
+%     \item Is causal identifiability (or a modification of it) enough to enable an optimal non-constant policy to be found?
+% \end{itemize}
+
+% \subsubsection{Identifiability and constant policy cost minimisation}
+
+% Suppose we have a causal optimization problem $\langle \mathcal{I}, V, \mathcal{F}, P_f, C\rangle$ where $\mathcal{F}$ is the set of constant functions $\Pi_i$ on $\mathcal{I}$. Let $Y\subset V\times\mathcal{I}$ be the set of variables on which $C$ is not constant. Then it is sufficient for the effect of $\mathcal{I}$ on $Y$ to be identifiable in the Pearlean sense for the optimal policy to be found (if it exists). Also sufficient is if the effect of $\mathcal{I}$ on $C(Y)$ to be identifiable.
+
+% In both cases it is possible to evaluate the function $h(i):= E_{\Pi_i}[C(Y)]$ at every $i\in\mathcal{I}$, provided this expectation exists. If it is possible to minimize $h$ on $\mathcal{I}$, then an optimal policy can be found.
+
+% Using Rubin's weaker definition of identifiability, it is necessary that the effect of $\mathcal{I}$ on $C(Y)$ be identifiable.
+
+% \subsubsection{Identifiability and nonconstant policy cost minimisation}
+
+% For reasons analogous to those above, if we admit non-constant policies $f:A\to I$ into consideration, it is sufficient to know $P_{f}(y|A=a)$ for all $f\in\mathcal{F}$.
+
+% Suppose that the intervention $I$ has no causal effect on $A$. That is, $P_f (A) = P_{f'}(A)$ for any $f,f'\in\mathcal{F}$. This avoids issues of circular dependence, but it is an additional assumption, not a matter of necessity.
+
+% If the above assumptions holds, $m$ is a CBN and the effect of $I$ on $Y$ is identifiable, then the conditional effect of $I$ on $Y$ given $A$ is identifiable.
+
+% \textbf{Proof sketch:} First, redo Definition \ref{def:CBN} with conditional interventions.
+
+% Next, by parental adjustment, $P_*(y|\mathrm{pa}_Y)$ is constant for all policies $*$ provided $\mathrm{pa}_Y$ has nonzero probability under $\mathrm{pa}_Y$.  
+
+% Define $\mathrm{ndp}^Y_I = \mathrm{pa}_Y\cap \mathrm{nd}_I$ and $\mathrm{dep}^Y_I=\mathrm{pa}_Y\cap \mathrm{de}_I$
+
+% \begin{align}
+%     P_*(y|a) &= \sum_{\mathrm{pa}_Y\setminus \{A\}} P_*(y|\mathrm{pa}_Y) P_*(\mathrm{pa}_Y\setminus\{A\}|a) \\
+%     P_*(y|a) &= \sum_{\mathrm{pa}_Y\setminus \{A\}} P_*(y|\mathrm{pa}_Y) P_*(\mathrm{ndp}^Y_I|a) P_*(\mathrm{dep}^Y_I|\mathrm{ndp}^Y_I,a)
+% \end{align}
+
+% We can split $\mathrm{pa}_Y$ into $\mathrm{pa}_Y\cap \mathrm{de}_I$ and $\mathrm{pa}_Y\cap \mathrm{nd}_I$. $P_*(\mathrm{ndp}_I)$ can only depend on the policy via $a$, and so $P_*(\mathrm{ndp}_I)$ is fixed for all policies. By the assumption that $A\in\mathrm{nd}_I$,  $P_*(\mathrm{dep}^Y_I|\mathrm{ndp}^Y_I,a)$ depends only on the policy via $I$.
+
+% Therefore $P_f(y|a)=P_{f'}(y|a)$ for all $f,f'$ such that $f(a)=f'(a)$.
+
+% If the effect of $I$ on $Y$ is identifiable, then we know $P_{\Pi_i}(y|a)$ for all constant policies $\Pi_i$. We can therefore compute $P_f(y|a)$ for non-constant $f$ by evaluating the constant policy $P_{\Pi_{f(a)}}(y|a)$ at every value of $a$.
+
+% The weaker assumption of ignorability needs to be modified to
+% \begin{align}
+%     P_{\Pi_o}(Y|Z,I,A) &= P_{f}(Y|Z,I,A) \\
+% \end{align}
+
+% This isn't a straightforward change - if it were possible to declare probability distributions equal under arbitrary policies, causal modelling would be pointless.
+
+\begin{definition}[Causal optimization problem]\label{def:2s_copt_prob}
+A causal optimization problem has 5 elements $\langle V, \Phi, I, A, C\rangle$. $V$, $I$ and $A$ are disjoint (but not independent) random variables, and $\phi$ is a variable taking values from some set of Markov kernels $\Phi\in\{\phi:A\to  \Delta I\}$. $C:\Delta(V\times I) \to \mathbb{R}$ is a cost function. Given these elements, and the possibility of generating an arbitrary number of i.i.d. samples for a particular choice of $\phi_{obs}\in\Phi$, the task is to find $\phi^*\in \Phi$ minimising $C(P(V, I|\phi))$.
+\end{definition}
 
 \begin{remark}
-The optimal policy isn't straightforward to derive using Causal Bayesian Networks. If we consider the setup above where we are permitted to conduct interventions on the node labeled by $I$, under the standard definition of intervention we would assume that it cuts off any dependence of $I$ on $X_2$. This would limit us to what are here described as constant policies, which are not in general optimal. 
-
-We could address this by proposing that $do()$-interventions could depend on the value of $X_2$ even if $I$ does not depend on it directly. This would invalidate some properties of Causal Bayesian Networks.
+In this version of the problem, sample complexity and training cost are neglected. A more general version would approximate a reinforcement learning problem, which would involve some kind of exploration-exploitation tradeoff.
 \end{remark}
 
-\begin{remark}
-If the policy depends on $X_2$, we never need to know the full probability distribution to find the optimal policy.
-\end{remark}
+\begin{definition}[Causal Identifiability]\label{def:causal_ident}
+Given the causal optimization problem $\langle V, \Phi, I, A, C\rangle$ and a set of test policies $\Phi_T$, the problem is identifiable if there exists $\phi_{obs}\in\Phi_T$ such that for all $\phi\in\Phi$ the distribution $P(I,V|\Phi=\phi)$ can be consistently estimated from i.i.d. samples under $\phi_{obs}$.
+\end{definition}
 
-\subsubsection{Hidden dependence}
-Let $\mathcal{I},X_1,X_2=\{0,1\}$ and $C(x_1,x_2,I)=x_1$. Suppose $X_2$ is not observed.
+Clearly, if a causal optimization problem is identifiable, then it is possible to find an optimal $\phi^*\in \Phi$. The converse is not generally true; for a trivial example, if the cost function is constant then identifiability is not needed as all policies are optimal.
 
-\begin{center}
-\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
-semithick ,
-state/.style ={ circle ,top color =white ,
-draw , text=blue , minimum width =1 cm}]
-\node[state] (B) [right] {$X_1$};
-\node[state,dashed] (A) [above left = 1cm and 3cm of B] {$X_2$};
-\node[state] (C) [below left = 1cm and 3cm of B] {$I$};
-\path (C) edge [] node[above] {} (B);
-\draw[dashed] (A) -- (B);
-\end{tikzpicture}
-\end{center}
+\subsection{Existing approaches to identifiability}
 
-We will assume the following structural equations
-\begin{align*}
-    X_2 &:= \mu_{X_2}\\
-    X_1 &:= \mathrm{XOR}(I,X_2)
-\end{align*}
-Where $\mu_{X_2}\sim \mathrm{Bernoulli}(0.2)$.
+In the following, unless otherwise mentioned, assume $I,A,V\in \{0,1\}$ and $C(P(I\times V)) = \mathbb{E}[V]$
 
-In this case, the problem appears to be identical to a problem with the dependence structure of \ref{sssec:simple_case}, and the optimal policy is constant $\Pi:I\mapsto 1$.
+\subsubsection{Potential Outcomes}
 
-\subsubsection{Confounded observations}
-Let $\mathcal{I},X_2=\{0,1\}$, $X_1=\{0,1,2\}$ and $C(x_1,x_2,I)=x_1$. Suppose $X_2$ is not observed.
+Define the constant policies $\pi_0:\mu_I\mapsto \delta(I)$ and $\pi_1:\mu_I\mapsto \delta(1-I)$ where $\delta(\cdot)$ is the Dirac delta function.
 
-Suppose also that we make infinite observations under some fixed policy $f$, and we are then free to impose our preferred policy $\Pi$.
+The potential outcomes approach argues that identifiability holds provided the following two assumptions are met for all $x\in X\subset A$, $i\in I$: \cite{rubin_causal_2005} \cite{sontag_causal_nodate}
+\begin{enumerate}
+    \item Ignorability: \[P(V|X=x,\Phi=\pi_i, I=i) = P(V|X=x,I=i,\Phi=\phi_{obs})\]
+    \item Common support: \[P(I=i|X=x,\Phi=\phi_{obs})>0\]
+\end{enumerate}
+Where $X$ is an observed set of covariates.
 
-\begin{center}
-\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
-semithick ,
-state/.style ={ circle ,top color =white ,
-draw , text=blue , minimum width =1 cm}]
-\node[state] (B) [right] {$X_1$};
-\node[state,dashed] (A) [above left = 1cm and 3cm of B] {$X_2$};
-\node[state] (C) [below left = 1cm and 3cm of B] {$I$};
-\path (C) edge [] node[above] {} (B);
-\draw[dashed] (A) -- (B);
-\draw (A) -- (C);
-\end{tikzpicture}
-\end{center}
-
-We will assume the following structural equations
-\begin{align*}
-    X_2 &:= \mu_{X_2}\\
-    X_1 &:= \neg I + X_2 \\
-    f   &:= X_2
-\end{align*}
-Where $\mu_{X_2}\sim \mathrm{Bernoulli}(0.2)$.
-
-The optimal policy will be $\Pi:I\mapsto 0$, but from our observations it will appear that $X_1 \CI I$ which would suggest that $\Pi$ is no better than the alternative.
-
-\subsubsection{Randomisation}
-Let $\mathcal{I}\{0,1\}$, $X_1=\{0,1,2\}$, $N=\{0,1,..,i,..,n\}$ and $C(x_1,i,I)=x_1$. Suppose $X_2$ is not observed.
-
-We wish to estimate the distribution of $X_1$ under fixed policies $f_0:I\mapsto 0$ and $f_1:I\mapsto 1$, and we can sample the system $n$ times. In order to do this, we will in fact be sampling under the policy $r:N\mapsto \{0,1\}$.
-
-\begin{center}
-\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
-semithick ,
-state/.style ={ circle ,top color =white ,
-draw , text=blue , minimum width =1 cm}]
-\node[state] (B) [right] {$X_1$};
-\node[state,dashed] (A) [above left = 1cm and 3cm of B] {$N$};
-\node[state] (C) [below left = 1cm and 3cm of B] {$I$};
-\path (C) edge [] node[above] {} (B);
-\draw[dashed] (A) -- (B);
-\draw (A) -- (C);
-\end{tikzpicture}
-\end{center}
-
-The dependence structure is identical to the previous section, which showed that in general it isn't possible to deduce the optimal policy from these observations. The difference is that we are free to choose $r$.
-
-Suppose there is some set of ``plausible'' functions $\mathcal{H}=\{N\times I\to X_1\}$. If we choose $f'$ such that 
-\begin{align}
-    \max_{h\in\mathcal{H}} \left| \langle \{h(i,0):r(i)=0\}\rangle - \langle \{h(i,0):i\in\{n\}\} \rangle \right| < \epsilon \label{eq:bin_random}
-\end{align}
-Where $\langle\cdot\rangle$ denotes an average. If we suppose this also holds for $h(\cdot,1)$, then we can be confident that the subset of samples for which $r(i)=0$ will provide a good estimate for the distribution of $X_1$ under $f_0$, and the subset for which $r(i)=1$ will provide a good estimate for the distribution under $f_1$.
-
-\subsection{Identifiability}
-
-In the following discussion, define constant policies $\Pi_i:I\mapsto i$ and an arbitrary "observational" policy $\Pi_o$.
-
-In the Pearlean framework, the causal effect of $X$ on $Y$ is identifiable if $P_{\Pi_i}(y)=P(y|do(X=i))$ is able to be consistently estimated from infinite observational data for all $i$. Given a graph $G$ over vertices $V$ representing a CBN \ref{def:CBN} and a subset $X\subset V$, denote the graph deleting all outgoing edges of $X$ by $G_{\underline{X}}$ and the graph obtained by deleting all incoming edges to $X$ as $G_{\overline{X}}$.
-
-Under these assumptions, four conditions for the identifiability of $X$ on $Y$ are given that are claimed to be both necessary and sufficient. The faithfulness assumption is not mentioned in the reference, but I can provide an example of an identifiable effect where $P$ is minimial but not faithful to $G$ and the following conditions do not hold \cite{galles_testing_2013}. Recall definition \ref{def:dsep} for the points below:
+These assumptions only cover optimization problems where $\Phi\in \{\pi_i|i\in I\}$. If $\Phi$ is in a larger class of functions, we must strengthen the assumption of ignorability:
 
 \begin{enumerate}
-    \item There is no path from $X$ to $Y$ in $G$
-    \item (No back-door path) $X\perp_{G_{\underline{X}}} Y$
-    \item (All back-door paths blocked) If $Z\subset V$ are observed, then $X\perp_{G_{\underline{X}}} Y|Z$
-    \item (``Front-door'' criterion) There exists $Z_1, Z_2 \subset V$ such that
-    \begin{itemize}
-        \item $Z_2\cap X =\varnothing$
-        \item $Z_1$ blocks all directed paths from $X$ to $Y$: $X \perp_{G_{\overline{X}}} Y | Z_1$
-        \item $Z_2$ blocks all back-door paths between $Z_1$ and $Y$ in $G_{\overline{X}}$: $Z_1 \perp_{G_{{\overline{X}}{\underline{Z_1}}}} Y | Z_2$
-        \item $Z_2$ blocks all back-door paths between $X$ and $Z_1$: $Z_1 \perp_{G_{{\underline{X}}}} X | Z_2$
-    \end{itemize}
+    \item Extended ignorability: for all $\phi\in\Phi$ \[P(V|X=x,\Phi=\phi, I=i) = P(V|X=x,I=i,\Phi=\phi_{obs})\]
 \end{enumerate}
 
-Recall that $d$-separation statements imply conditional independences in the associated probability distribution $P_\cdot$.
+Even when these assumptions are met, there is an ambiguity over how to identify the effect of a policy $\phi$. Consider the following two cases, and assume extended ignorability:
 
-The first three are sufficient for estimating $P_{\Pi_i}(y)$ from $P(y|I,z)$, while the fourth has a more complicated estimation procedure.
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+semithick ,
+state/.style ={ circle ,top color =white ,
+draw , text=blue , minimum width =1 cm}]
+\node[state] (B) [right] {$V$};
+\node[state] (A) [left = 3cm of B] {$I$};
+\node[state] (C) [above right = 1cm and 1.5cm of A] {$X$};
+\path (A) edge [] node[above] {} (B);
+\draw (C) -- (A);
+\draw (C) -- (B);
+\node[state] (D) [right = 4cm of B] {$I$};
+\node[state] (E) [right = 1.5cm of D] {$X$};
+\node[state] (F) [right = 1.5cm of E] {$V$};
+\path (A) edge [] node[above] {} (B);
+\draw (C) -- (A);
+\draw (C) -- (B);
+\draw (D) -- (E);
+\draw (E) -- (F);
+\end{tikzpicture}
+\end{center}
 
-In the Rubin Causal Model, the set of interventions considered is two-valued: $\mathcal{I}=\{0,1\}$. Rubin uses notation that considers finite sample effects and adds assumptions to ensure that we can derive IID samples from $P_{\Pi_0}$ and $P_{\Pi_1}$, which we will neglect. Rubin shows that the population average treatment effect $\mathbb{E}_{P_{\Pi_1}} [Y] - \mathbb{E}_{P_{\Pi_0}} [Y]$ can be calculated from samples from $P_{\Pi_o}(Y|I=0)$ and $P_{\Pi_o}(Y|I=1)$ provided \emph{ignorability} holds \cite{rubin_causal_2005}.
 
-To define ignorability properly, I'd need to define counterfactual quantities. For the moment I will use the following definition that I believe captures the same idea
+In the first case,
 \begin{align}
-    P_{\Pi_o}(Y|Z,I=0) &= P_{\Pi_0}(Y|Z,I=0) \\
-    P_{\Pi_o}(Y|Z,I=1) &= P_{\Pi_1}(Y|Z,I=1)
+    P(V|\phi)&=\sum_{I,X} P(X) P(I|X,\phi) P(V|I,X,\phi)\\
+             &=\sum_{I,X} \phi(X)(I) P(X)  P(V|I,X,\phi_{obs}) \label{eq:hc_xcov}
+\end{align}
+while in the second case
+\begin{align}
+    P(V|\phi)&=\sum_I P(I|\phi) P(V|I,\phi) \\
+             &=\sum_I \phi(\varnothing)(I) P(V|I,\phi_{obs})\\
+             &=\sum_{I,X} \phi(\varnothing)(I) P(X|I,\phi_{obs}) P(V|I,X,\phi_{obs}) \label{eq:int_xcov}
+\end{align}
+Equations \ref{eq:hc_xcov} and \ref{eq:int_xcov} are not in general equal.
+
+\subsubsection{Causal Bayesian Networks}
+
+For Causal Bayesian Networks, we will identify the intervention $do(I=i)$ with the constant policy $\pi_i$.
+
+For some graph $G$ and some node $I$, denote the graph deleting all outgoing edges of $I$ by $G_{\underline{I}}$ and the graph obtained by deleting all incoming edges to $I$ as $G_{\overline{I}}$.
+
+Assume that with respect to some graph $G$, $P$ satisfies the conditions of a Causal Bayesian Network (Definition \ref{def:CBN}) for $P(V|do(I=i)=P(V|\pi_i)$, $\forall i\in I$. Given this assumption, a key criterion for identifiability in Causal Bayesian Networks is the ``back-door'' criterion:
+
+If $X\subset A$ are observed, then $I\perp_{G_{\underline{I}}} V|X$
+
+There is also a ``front-door'' criterion, which depends on a more complex graph structure.
+
+The back-door criterion implies ignorability \cite{pearl_causality:_2009}. Furthermore, a CBN does not suffer from the covariate adjustment ambiguity above.
+
+The common support assumption doesn't seem to be mentioned much in the CBN literature, but it is also required for identifiability as it has been defined in \ref{def:causal_ident}. In particular, it may not be possible to identify the effects of all policies of interest. It's easy to verify that the probability distribution generated by $\Phi=\pi_1$, $V=I$ satisfies the above conditions for the graph
+
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+semithick ,
+state/.style ={ circle ,top color =white ,
+draw , text=blue , minimum width =1 cm}]
+\node[state] (B) [right] {$V$};
+\node[state] (A) [left = 3cm of B] {$I$};
+\path (A) edge [] node[above] {} (B);
+\end{tikzpicture}
+\end{center}
+
+However, this doesn't allow for $P(V|\pi_0)$ to be consistently estimated - $P(V|I=0,\Phi=\pi_1)$ asks us to condition on a contradiction.
+
+It is straightforward to define a distribution under a conditional intervention using a CBN: $P(V|\Phi=\phi)=\sum_X P(V|X,\Phi=\phi(x)) P(X)$. This amounts to a modification of Definition \ref{def:CBN} where we extend the parental adjustment assumption to cover $do$ interventions with arguments that may depend on other nodes in the graph. There are reasonable situations in which this extension may not hold, even if the original assumption holds (see section \ref{sssec:SUTVA} below).
+
+\subsubsection{Untestability of key assumptions}
+
+Given the ``one-kernel'' rule, we are restricted to knowing at most one of $P(V|X=x,\Phi=\phi,I=0)$ and $P(V|X=x, I=0, \Phi=\phi_{obs})$ if $\phi\neq \phi_{obs}$. Thus, we cannot in general test whether these distributions are equal, as the ignorability assumption asserts. 
+
+Furthermore, it is may not be intuitively obvious when the assumption holds. A common practical approach is to make $X$ a very large set of covariates. It is not obvious when $X$ is a large enough set of covariates, nor is it obvious if the covariates included should be adjusted for (as in the first example above) or not adjusted for (as in the second).
+
+The back-door criterion is also untestable for general $\phi_{obs}$. No property of the distribution $P(V,I,X)$ can rule out the existence of some unmeasured $X'$ such that $X'$ is a common ancestor of $V$ and $I$, which would create an additional back-door path.
+
+I also propose a pair of assumptions that entail both ignorability and the back-door criterion. Like the potential outcomes approach, they allow for causal effects to be defined without assuming that the full set of random variables can be modeled as a CBN. Unlike the potential outcomes approach, these assumptions are not ambiguous over how to adjust for covariates. They are sufficient and not necessary conditions:
+
+\begin{enumerate}
+    \item Known domain: Every $\phi\in\Phi\cup \Phi_T$ has domain $A$, and $A$ is observed
+    \item Policy is not intrinsically relevant: $P(V|A,I,\Phi)=P(V|A,I)$ for all $a\in A$, $i\in I$, $\phi\in \Phi$
+\end{enumerate}
+
+\subsubsection{Interactions}\label{sssec:SUTVA}
+
+A challenge for the CBN framework of causal inference is situations where the effects of separate intervention decisions may interact.
+
+Suppose a vaccine for a contagious disease is being tested on two individuals who live in the same home. The probability of infection $D$ depends on both the vaccination decision $V$ and the presence of another infected person $P$:
+
+\begin{table}[]
+    \centering
+    \begin{tabular}{c|c|c}
+        & $P=0$ & $P=1$ \\
+         \hline
+        $V=0$ & 0.5 & 1 \\
+        $V=1$ & 0.2 & 0.4
+    \end{tabular}
+    \caption{Probability of disease $D$ by vaccination and presence of infection}
+    \label{tab:vaccination_interaction}
+\end{table}
+
+For simplicity's sake, we will posit there are two opportunities for infection, both governed by the probabilities in the above table. At the first infection opportunity, neither housemate is infected. However, the presence of infection is only measured once, at the end of the second period.
+
+If the decision to vaccinate $\Phi$ has domain $\varnothing$, we could naively model the situation with the following graph for each individual:
+
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+semithick ,
+state/.style ={ circle ,top color =white ,
+draw , text=blue , minimum width =1 cm}]
+\node[state] (A) [left] {$V$};
+\node[state] (B) [right = 3cm of A] {$D$};
+\path (A) edge [] node[above] {} (B);
+\end{tikzpicture}
+\end{center}
+
+If $\Phi$ is restricted to constant policies $\pi_0:V\mapsto 0$ and $\pi_1:V\mapsto 1$, the parental adjustment condition must hold for the above graph, as $V=0\implies \phi=\pi_0$ and so $P(D|V=0)=P(D|\Phi=\pi_0)$. However, this is not true for general policies. If the unobserved housemate is vaccinated, then we have
+\begin{align}
+    P(D|V=0) &= 0.5 + (1-0.5)(0.2*0.5+0.4*1) \\
+             &= 0.75 \\
+    P(D|\Phi=\pi_0) &= 0.5 + (1-0.5)(0.5*0.5 + 0.5*1) \\
+            &= 0.875 \\
+            &\neq P(D|V=0)
 \end{align}
 
-Needs work: the difficulty is that counterfactuals posit a "true" value of $Y(1)$ - the outcome given the treatment. It seems \emph{reasonable} to interpret this as the value of $Y$ under a constant policy of $I\mapsto 1$, but it's not obvious that this is the only possible interpretation. The definition here does at least match Pearl's definition of counterfactuals.
+Another naive attempt would fail due to containing a cycle. Here $V^i$ ($D^i$) are the vaccination (infection) states of the $i$th housemate:
 
-Pearl's identifiability condition is stronger than Rubin's. If we know $P_{\Pi_i}(y)$ for all $i\in \mathcal{I}$, then provided $P_{\Pi_i}$ has an expected value, we can trivially find $\mathbb{E}_{P_{\Pi_i}} [Y] - \mathbb{E}_{P_{\Pi_j}} [Y]$ for any $i,j\in\mathbb{R}$.
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+semithick ,
+state/.style ={ circle ,top color =white ,
+draw , text=blue , minimum width =1 cm}]
+\node[state] (A) [left] {$V^1$};
+\node[state] (D) [below = 2cm of A] {$V^2$};
+\node[state] (B) [right = 3cm of A] {$D^1$};
+\node[state] (C) [right = 3cm of D] {$D^2$};
+\draw (A) -- (B);
+\draw (D) -- (C);
+\draw[<->] (B) -- (C);
+\end{tikzpicture}
+\end{center}
 
-Neither set of assumptions is strictly stronger than the other. (1)-(3) of the do-calculus identifiability imply ignorability, but (4) may hold when ignorability does not. On the other hand, given a graph where an unobserved variable $U$ is a parent of both $X$ and $Y$ (and hence violating the back-door criterion), we can propose a compatible probability distribution $P$ where ignorability holds due to intransitivity unfaithfulness at $U$ \ref{def:intrans_unfaith}.
+A working CBN model is possible, but it demands modelling the dynamics of the system which may introduce many degrees of freedom and not always be necessary. Here $D^1_i$ is the infection state of housemate 1 at time $i$:
 
-\textbf{Conjecture:} Rewriting (1)-(4) of the do-calculus conditions in terms of conditional independences rather than d-separation would render them necessary and sufficient to identify a causal effect.
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,
+semithick ,
+state/.style ={ circle ,top color =white ,
+draw , text=blue , minimum width =1 cm}]
+\node[state] (A) [left] {$V^1$};
+\node[state] (F) [below = 2cm of A] {$V^2$};
+\node[state] (B) [right = 3cm of A] {$D^1_1$};
+\node[state] (C) [right = 3cm of F] {$D^2_1$};
+\node[state] (D) [right = 3cm of B] {$D^1_2$};
+\node[state] (E) [right = 3cm of C] {$D^2_2$};
+\draw (A) -- (B);
+\draw (F) -- (C);
+\draw (B) -- (E);
+\draw (C) -- (D);
+\draw (B) -- (D);
+\draw (C) -- (E);
+\end{tikzpicture}
+\end{center}
 
-\subsubsection{Relationship between causal identification and cost minimisation}
+The assumption that these kind of interactions don't occur is discussed in the Potential Outcomes literature as part of the "stable unit treatment value assumption" (SUTVA).
 
-Both criteria for causal identification above consider only constant policies. Some questions arise:
-\begin{itemize}
-    \item Is causal identifiability along with the assumption that there is an optimal constant policy enough to enable the optimal policy to be found?
-    \item Is causal identifiability (or a modification of it) enough to enable an optimal non-constant policy to be found?
-\end{itemize}
+\textbf{Question: } How does the ``policy-intrinsic-irrelevance'' assumption behave when there might be interactions of this form?
 
-\subsubsection{Identifiability and constant policy cost minimisation}
 
-Suppose we have a causal optimization problem $\langle \mathcal{I}, V, \mathcal{F}, P_f, C\rangle$ where $\mathcal{F}$ is the set of constant functions $\Pi_i$ on $\mathcal{I}$. Let $Y\subset V\times\mathcal{I}$ be the set of variables on which $C$ is not constant. Then it is sufficient for the effect of $\mathcal{I}$ on $Y$ to be identifiable in the Pearlean sense for the optimal policy to be found (if it exists). Also sufficient is if the effect of $\mathcal{I}$ on $C(Y)$ to be identifiable.
 
-In both cases it is possible to evaluate the function $h(i):= E_{\Pi_i}[C(Y)]$ at every $i\in\mathcal{I}$, provided this expectation exists. If it is possible to minimize $h$ on $\mathcal{I}$, then an optimal policy can be found.
 
-Using Rubin's weaker definition of identifiability, it is necessary that the effect of $\mathcal{I}$ on $C(Y)$ be identifiable.
+% \begin{definition}[Interventional projection]
+% Define an equivalence relation $\sim$ on $A$ such that $a\sim a'$ iff $P(V|a,i)=P(V|a',i)$ for all $i\in I$. Denote by $E_a$ the equivalence class of $a\in A$ induced by $\sim$, and $\mathbf{E}_A$ the set of such equivalence classes. The interventional projection of $A$ is the map $g:A\to\mathbf{E}_A$. 
+% \end{definition}
 
-\subsubsection{Identifiability and nonconstant policy cost minimisation}
+% \begin{definition}[Complete interventional projection]
+% An interventional projection is complete with respect to a policy $f$ if for every $i\in I$ and $E_a\in\mathbf{E}_A$ there exists $a\in E_a$ such that $f(a)=i$.
+% \end{definition}
 
-For reasons analogous to those above, if we admit non-constant policies $f:A\to I$ into consideration, it is sufficient to know $P_{f}(y|A=a)$ for all $f\in\mathcal{F}$.
+% \begin{example}[Complete interventional projection]
+% Suppose $A=X\times M$ where $X$ is a set of observed covariates and $M$ is a noise where $V\CI M | I$. Then $g(x,\mu)=x$ is an interventional projection of $A$, and for any $f$ where for all $i,x$ there exists a $\mu\in M$ such that $f(x,\mu)=i$, $g$ is a complete interventional projection.
+% \end{example}
 
-Suppose that the intervention $I$ has no causal effect on $A$. That is, $P_f (A) = P_{f'}(A)$ for any $f,f'\in\mathcal{F}$. This avoids issues of circular dependence, but it is an additional assumption, not a matter of necessity.
+% \begin{theorem}[Complete interventional projection implies policy identifiability]
+% Given a causal optimisation problem $\langle P, V, \mathcal{F}, I, A, \mathcal{C}\rangle$, if there is some $f\in\mathcal{F}$ such that there is a complete interventional projection $g:A\to\mathbf{E}_A$, then $P$ is identifiable.
+% \end{theorem}
 
-If the above assumptions holds, $m$ is a CBN* and the effect of $I$ on $Y$ is identifiable, then the conditional effect of $I$ on $Y$ given $A$ is identifiable.
+% \begin{proof}
+% Take $f\in\mathcal{F}$ to be a policy with a complete interventional projection $g$. Given arbitrary $a\in A$ and $i\in I$, we have $P(V|a,i)=P(V|a',i)$ for any $a'\in g(a)$. By assumption, there exists some $a'\in g(a)$ such that $f(a')=i$, and so $P(V|a',i)$ can be consistently estimated.
+% \end{proof}
 
-\textbf{Proof sketch:} First, redo Definition \ref{def:CBN} with conditional interventions.
 
-Next, by parental adjustment, $P_*(y|\mathrm{pa}_Y)$ is constant for all policies $*$ provided $\mathrm{pa}_Y$ has nonzero probability under $\mathrm{pa}_Y$.  
 
-Define $\mathrm{ndp}^Y_I = \mathrm{pa}_Y\cap \mathrm{nd}_I$ and $\mathrm{dep}^Y_I=\mathrm{pa}_Y\cap \mathrm{de}_I$
-
-\begin{align}
-    P_*(y|a) &= \sum_{\mathrm{pa}_Y\setminus \{A\}} P_*(y|\mathrm{pa}_Y) P_*(\mathrm{pa}_Y\setminus\{A\}|a) \\
-    P_*(y|a) &= \sum_{\mathrm{pa}_Y\setminus \{A\}} P_*(y|\mathrm{pa}_Y) P_*(\mathrm{ndp}^Y_I|a) P_*(\mathrm{dep}^Y_I|\mathrm{ndp}^Y_I,a)
-\end{align}
-
-We can split $\mathrm{pa}_Y$ into $\mathrm{pa}_Y\cap \mathrm{de}_I$ and $\mathrm{pa}_Y\cap \mathrm{nd}_I$. $P_*(\mathrm{ndp}_I)$ can only depend on the policy via $a$, and so $P_*(\mathrm{ndp}_I)$ is fixed for all policies. By the assumption that $A\in\mathrm{nd}_I$,  $P_*(\mathrm{dep}^Y_I|\mathrm{ndp}^Y_I,a)$ depends only on the policy via $I$.
-
-Therefore $P_f(y|a)=P_{f'}(y|a)$ for all $f,f'$ such that $f(a)=f'(a)$.
-
-If the effect of $I$ on $Y$ is identifiable, then we know $P_{\Pi_i}(y|a)$ for all constant policies $\Pi_i$. We can therefore compute $P_f(y|a)$ for non-constant $f$ by evaluating the constant policy $P_{\Pi_{f(a)}}(y|a)$ at every value of $a$.
-
-*Needs to be an extended CBN with non-constant interventions
 
 % \subsection{Recovering a model-selection rule}
 

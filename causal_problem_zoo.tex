@@ -1,0 +1,27 @@
+\subsection{Causal Problem Zoo}
+
+\subsubsection{Randomised Control Trials}
+
+Randomised Control Trials (RCTs) are one of the original domains of causal inference. Medical research makes extensive use of RCTs and \cite{collaboration_cochrane_nodate} is considered an authoritative guide on study methodology.
+
+Clinical RCTs have some points of connection with definition \ref{def:2s_copt_prob} and some points of departure. 
+
+Formally, there may be one or more cost functions informally defined over one or more "outcomes of interest". A typical example might be, given outcome $V$ and treatment $I$, $C(\mu_{V\times I})=\mathbb{E}[V]$.
+
+The policies of interest $\Phi$ over the binary intervention $I\in\{0,1\}$ are often the constant treatment policy $\pi_1$ and the constant no-treatment policy $\pi_0$. A key target of measurement is then the difference in cost between these two policies: $\mathbb{E}[V|\pi_1]-\mathbb{E}[V|\pi_0]$
+
+$\phi_{obs}$ is a randomised policy, which may or may not consist of additional transformations such as stratification on observables $A$.
+
+A key feature of RCTs  not often included in the mathematical formalism is that the "policy test" and "policy deployment" environments are usually quite different. In the test environment, there is near-total control over the policy $\Phi$, while only a weak perturbation of $\Phi$ might be possible in the deployment environment. Furthermore, there might be background variables $X$ that are peculiar to the experiment that affect the measured outcomes $V$.
+
+There is an adversarial character to RCTs in that there are often multiple people involved who, for various reasons, want the results to come out in a particular way. Consequently a lot of attention is paid to the task of making the results as tamper-proof as possible.
+
+The Cochrane Reviewer's Handbook identifies four sources of bias in trials, some of which are relevant to the theory discussed here:
+
+\begin{itemize}
+    \item Selection bias: this occurs when the observational policy $\phi_{obs}$ gets corrupted by unintended sources of variation such as if an experimenter made enrollment and exclusion decisions based on the randomized treatment assignments. This is relevant to questions of ``soft interventions''
+    \item Performance bias: this occurs when different standards of care are applied to the treatment and control group. This could be seen as a difference between the background variables in the experiment and actual environments
+    \item Attrition bias: this occurs when attrition occurs between the beginning of the experiment and the results being measured. This attrition might occur for different reasons between the intervention and control group and lead to biased results
+    \item Detection bias: this occurs when there are systematic difference between groups in terms of how results are measured. This appears to be quite similar to performance bias, except where the former involves background variables influencing the actual quantity of interest, this simply influences the measurement of the quantity of interest
+\end{itemize}
+
