@@ -1,0 +1,37 @@
+\begin{definition}[Pseudo-Random Variable Kernel]
+    Given a random variable $X:E\to F$, a Markov kernel $K_X$ where, for $e\in E$ and $B\in\mathcal{F}$,
+    \begin{align}
+        K_X(e,B) = \mathds{1}_{X(e)\in B}
+    \end{align}
+    Will be called a Pseudo-Random Variable Kernel on $X$.
+\end{definition}
+
+\begin{lemma}[Pseudo-RV transform]
+Given a random variable $X:E\to F$ and a pseudo-RV kernel $K_X$ and a measure $\mu$ on $(E,\mathcal{E})$, the image measure $\mu\circ X^{-1}$ is the same as the kernel transform $\mu K_X$.
+\end{lemma}
+
+\begin{proof}
+For all $B\in\mathcal{F}$,
+\begin{align}
+    \mu K_X(B) &= \int_E \mu(de)K(e,B) \\
+               &= \int_E \mu(de) \mathds{1}_{X(e)\in B} \\
+               &= \mu(X^{-1} B)
+\end{align}
+\end{proof}
+
+Pseudo-RV kernels are a convenience to allow for random variables to be used with graphical kernel composition without defining new rules for the inclusion of random variables.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c|c}
+        Name & Symbol & Type signature  \\
+        \hline
+        Observation at level $i$ & $\theta_i$ & $H\to \Delta(\mathcal{A})$ \\
+        Policy choice & $\pi$ & $H\to \Delta(\mathcal{I})$ \\
+        Resolution & $\mu$ & $H\times I \to \Delta(\mathcal{V})$  \\
+    \end{tabular}
+    \caption{Markov kernel definitions.}
+    \label{tab:kernels}
+\end{table}
+
+

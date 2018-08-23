@@ -1,18 +1,30 @@
 \section{Causal Policies}
 
+\begin{definition}[Causal Model]
+A causal model is a tuple $\mathcal{M} = \langle V, \Phi, P_\Phi \rangle$. $V$ is a set of variables with subsets $A, I\subset V$, and $\Phi$ is a set of Markov kernels $\phi:A\to \Delta I$. $P_\phi : \Phi\to \Delta V$ is a map from $\Phi$ to distributions on $V$. Even though $\Phi$ is not a random variable, we will write $P(V|\phi) := P_\phi(V)$.
+\end{definition}
+
+I'm going to proceed with a frequentist view of causal models - given a set of variables $V$ and a choice of policies $\Phi$ to implement, there is some ``true'' map $P_\phi$ which we could discover by choosing each $\phi\in \Phi$ and taking infinite i.i.d. samples of $V$ every time.
+
 \begin{definition}[Causal optimization problem]\label{def:2s_copt_prob}
-A causal optimization problem has 5 elements $\langle V, \Phi, I, A, C\rangle$. $V$, $I$ and $A$ are disjoint (but not independent) random variables, and $\phi$ is a variable taking values from some set of Markov kernels $\Phi\in\{\phi:A\to  \Delta I\}$. $C:\Delta(V\times I) \to \mathbb{R}$ is a cost function. Given these elements, and the possibility of generating an arbitrary number of i.i.d. samples for a particular choice of $\phi_{obs}\in\Phi$, the task is to find $\phi^*\in \Phi$ minimising $C(P(V, I|\phi))$.
+A causal optimization problem is a problem of the form: Given a set of variable $V$ and policies $\Phi$ whose joint dynamics are governed by some generally unknown causal model $\mathcal{M}$, find $\phi^* = \mathrm{argmin}_{\phi\in\Phi} \eta(P(V|\phi))$.
+\end{definition}
+
+A problem with a closer connection to existing literature is the causal identification problem:
+
+\begin{definition}[Causal identification problem]\label{def:causal_ident_prob}
+A causal identification problem is a problem of  the form: Given a set of variables $V$, policies $\Phi$ and  whose joint dynamics are governed by an unknown causal model $\mathcal{M}$, find $P(V|\phi)$ for each $\phi\in \Phi$.
+\end{definition}
+
+In the next section I will focus on active causal identification problems. An example of such a problem would be a randomised control trial. My view is that a reasonably strong case can be made that active causal identification problems can be solved, and that this is an appropriate place to start before proceeding to less-idealised, less-active cases.
+
+\begin{definition}[Active causal identification problem]
+An active causal identification problem is a causal identification problem of the following type: Given a set of variables $V$ and policies $\Phi$ and  whose joint dynamics are governed by an unknown causal model $\mathcal{M}$; additionally given $\Phi_L, \Phi_D\subset \Phi$ are ``learning'' and ``deployable'' subsets of policies, and for exactly one $\phi_L\in \Phi_L$ we have the opportunity to take infinite i.i.d. observations of $V$; find $P(V|\phi_D)$ for every $\phi_D\in\Phi_D$.
 \end{definition}
 
 \begin{remark}
-In this version of the problem, sample complexity and training cost are neglected. A more general version would approximate a reinforcement learning problem, which would involve some kind of exploration-exploitation tradeoff.
+It's not clear if the separation between $\Phi_L$ and $\Phi_D$ is needed in general, I am including it for now just in case.
 \end{remark}
-
-\begin{definition}[Causal Identifiability]\label{def:causal_ident}
-Given the causal optimization problem $\langle V, \Phi, I, A, C\rangle$ and a set of test policies $\Phi_T$, the problem is identifiable if there exists $\phi_{obs}\in\Phi_T$ such that for all $\phi\in\Phi$ the distribution $P(I,V|\Phi=\phi)$ can be consistently estimated from i.i.d. samples under $\phi_{obs}$.
-\end{definition}
-
-Clearly, if a causal optimization problem is identifiable, then it is possible to find an optimal $\phi^*\in \Phi$. The converse is not generally true; for a trivial example, if the cost function is constant then identifiability is not needed as all policies are optimal.
 
 \subsection{Existing approaches to identifiability}
 
@@ -178,7 +190,7 @@ draw , text=blue , minimum width =1 cm}]
 \end{tikzpicture}
 \end{center}
 
-A working CBN model is possible, but it demands modelling the dynamics of the system which may introduce many degrees of freedom and not always be necessary. Here $D^1_i$ is the infection state of housemate 1 at time $i$:
+A working CBN model is possible, but it demands modelling the dynamics of the system which may introduce many degrees of freedom and not always be necessary. Here $D^i_j$ is the infection state of housemate $i$ at time $j$:
 
 \begin{center}
 \begin{tikzpicture}[-latex ,auto ,node distance =4 cm and 5cm ,on grid ,

@@ -1,0 +1,864 @@
+% \section{The Philosophical Case for Replacing Interventions With Markov Kernels}
+
+% The two leading accounts of causality in the statistical sciences combine the well understood theory of probability with some less familiar ideas. The Pearlean Causal Bayesian Network framework models causality with a large family of probability distributions indexed by \emph{interventions}, actions somehow outside the model that fix the value of particular variables. The Neyman-Rubin potential outcomes approach, on the other hand, posits the variable $Y_1$, the ``true'' outcome of an intervention that is ``fixed by the science''.
+
+% Both interventions and true values are problematic in that it isn't clear what exactly in the real world they are supposed to be standing for. I'll argue that this confusion is somewhat more profound than it is for probability distributions - for the latter there are multiple accounts for how we could \emph{in principle} get a good representation of one by taking infinite i.i.d. measurements of a set of variables, or how a rational reasoner should make use of probabilities in particular ways. On the other hand, we don't have a similar account of what an idealised intervention would actually look like, nor how we might recognise the difference between a true outcome and an outcome that we simply happened to observe.
+
+% Finally, I will argue that these confusions can be resolved by regarding the causal reasoning process itself as a part of the environment that takes in considerations and recommends actions. Under certain untestable (but sometimes reasonable) assumptions, though the causal reasoning process is itself merely a Markov kernel, it can proceed self-consistently by querying the behaviour of the environment under a set of Markov kernels and selecting the option it deems most favourable. This set of kernels can be reduced to a set of Pearlean do-interventions, and can be shown to generate the ``true'' values of the potential outcomes approach, but casting the reasoning process in terms of kernels handles certain cases better than either.
+
+% \subsection{do-Interventions}
+
+% \subsubsection{Interventions as ordinary actions}
+% One account of interventions is that they are what you ordinarily think of when you think of ``taking an action''. To illustrate this idea we might contrast the difference between $P(\text{Sick tomorrow}|\text{Take medicine today})$ and $P(\text{Sick tomorrow}|do(\text{Take medicine today}))$. The former invites us to consider every day we did or didn't take medicine and whether or not we were sick on the following day, a calculation that would surely come down hard on the side of taking medicine. The latter seems to ask a different question - something like "how will I feel tomorrow if I do (or don't) take medicine?". Whatever it is, $do(\text{Take medicine})$ does \emph{not} really seem to be some special kind of event that we can condition on; it's hard to imagine how such an event could differ much from simply $\text{Take medicine}$ without abandoning our original formulation of a $do$ as what you ordinarily think of as ``taking an action''.
+
+% One possible way to rescue the ``do as a special kind of action'' hypothesis would be to consider that when we are asking $P(\text{Sick tomorrow}|do(\text{Take medicine today})$ we are probably imagining a situation in which we are sick today, as in most cases when we took medicine in the past. We could then speculate that $do(\text{Take medicine today})$ is actually a composite of $\{\text{Take medicine today},\text{Sick today}\}$. Of course we have plenty of research indicating that $P(\text{Sick tomorrow}|\text{Take medicine today},\text{Sick today})$ is also a poor approximation of $P(\text{Sick tomorrow}|do(\text{Take medicine today}))$ if we suppose randomised experiments can give a good estimate of the latter. We could nonetheless imagine that it is perhaps possible to continue adding variables to the conditioning set until we get a good approximation of $P(\text{Sick tomorrow}|do(\text{Take medicine today}))$. Two issues that now face us are, first and less importantly, we seem to have abandoned the simple intuition of ``do as an action'', and secondly and more importantly, in this intuitive setting it is hardly obvious how we should go about collecting every relevant event that is needed in the conditioning set.
+
+% \subsubsection{Interventions as selections from possible worlds}
+% Taking the ``adding confounders'' view to the extreme we could come up with something like 
+% \begin{align*}
+%     &P(\text{Sick tomorrow}|do(\text{Take medicine today}))=\\
+%     &P(\text{Sick tomorrow}|\text{Take medicine today},\text{The state of the rest of the universe})
+% \end{align*} i.e. we can find the effect of $do()$ by holding absolutely everything else constant and comparing outcomes when different arguments are substituted into the $do()$. Here we could imagine two worlds, exact copies of each other, except where in one world we take medicine, in the other world we don't. This, I think, has strayed a long way from ``a $do()$ is like when you do something''. On the other hand, it seems that if we could conduct this difficult universe-copying experiment, we could probably make a good choice about taking the medicine.
+
+% As an ideal, though, this leaves something to be desired. The idea that a probability distribution is something you can get by by taking infinite i.i.d. samples leaves us unable to ever see a true probability distribution because we can't take infinite samples nor can be be sure they're i.i.d.. However, i.i.d. seems like a plausible assumption in some cases, and in some cases we can get a decent approximation of a probability distribution with a rather small, finite number of samples. We don't have a similar ability to approximate the possible worlds view - there is in general no number of additional conditioning variables that is guaranteed to be ``enough'', and it is in fact possible to add conditioning variables that make the approximation worse just as adding some can make it better. There is also the objection that our naive causal intuitions just seem \emph{simpler} than this.
+
+% \subsubsection{Interventions as constraints on dynamic models}
+% Suppose we have a detailed mechanical model of the disease in question, our immune system and the action of the medicine we're considering. Suppose we also know that this model is ``correct''. We could initialise the model with some distributions representing our uncertainty over parameters such as disease progression, immune system stresses etc. In this case, the output of the model when we include the medicine in it could well be thought of as $P(\text{Sick tomorrow}|do(\text{Take medicine today}))$. This seems like a great deal of complication for what appears to be a fairly simple question. 
+
+\section{Policy-based causal inference}
+
+\subsection{Motivation}
+
+The formal idea of a $do()$ intervention is not a satisfactory analogue of the intuitive notion of ``doing something''. Intuitively, when we do something we are not always intending to fix a particular variable to a particular value, and even if we are we usually don't take that action randomly or always take the same action no matter what.
+
+However, causal questions very often are of the type ``if I \emph{did} $X$, how would $Y$ turn out?'' using the informal, intuitive sense of \emph{do}. Some examples: 
+\begin{itemize}
+    \item If I prescribed the medication, how would the patient fare?
+    \item If I quit smoking, how would it affect my chance of developing cancer?
+    \item If I choose banner arrangement $X$, what would be the effect on click-through rates?
+\end{itemize}
+
+Often implicit in these questions is also a notion of a cost over the possible actions and outcomes. Quitting smoking may be undesirable, and developing lung cancer may be more undesirable. 
+
+A defense of the $do()$ operation could be made in the following manner: even though the $do()$ operation doesn't correspond to our intuitive idea of taking an action, the set of marginals $P(Y|do(X))$ are be the relevant distributions to inform decisions about actions. Ideally this argument could be justified without recourse to the intuitive notion of a $do()$ operation.
+
+Here I develop the idea of policy-based causal inference. Motivated by the idea of cost minimization, I consider the problem of determining the distribution of outcomes given a policy rather than an intervention, the former being a random map from a set of observed background variables to an intervention. For the time beingI don't address the cost minimisation question directly, focusing instead on finding the policy-conditional distribution of outcomes. In line with the Potential Outcomes approach to causal inference, I consider causal questions to be subjective questions about the effects of different courses of action, in contrast with the Causal Bayesian Network approach that regards causal questions as questions about objective relationships between sets of variables. On the other hand, I will consider distributions generated by the composition of Markov kernels, which is closer to the approach of Causal Bayesian Networks than of Potential Outcomes.
+
+\subsection{Markov kernels and a general causal model}
+
+\begin{definition}[Markov kernel]
+Given two measureable sets $(E,\mathcal{E})$ and $(F,\mathcal{F})$, a Markov kernel $K$ is a map $E\times \mathcal{F} \to [0,1]$ where
+\begin{itemize}
+    \item The map $x\mapsto K(x,B)$ is $\mathcal{E}$-measurable for every $B\in\mathcal{F}$
+    \item The map $B\mapsto K(x,B)$ is a probability measure on $(F,\mathcal{F})$ for every $x\in E$ 
+\end{itemize}
+
+It is often clearer to write $K:E\to \Delta(\mathcal{F})$, to be read as ``$K$ maps from $E$ to probability measures on $(F,\mathcal{F})$''.
+
+\textbf{Issue: }Cinlar's defines Markov kernels as kernels from $(E,\mathcal{E})$ to $(E,\mathcal{E})$, while Achim defines them as kernels from $(E,\mathcal{E})$ to $(F,\mathcal{F})$. Need to work out which version I want to use.
+\end{definition}
+
+\begin{definition}[Measure-kernel-function product]\label{def:kernel_products}
+If $K$ is a Markov kernel from $(E,\mathcal{E})$ to $(F,\mathcal{F})$ and $\mu$ is a probability measure on $(E,\mathcal{E})$, then
+\begin{align}
+    \mu K(B)=\int_E \mu(dx) K(x, B),\qquad B\in\mathcal{F}
+\end{align}
+defines a probability measure $\mu K$ on $(F,\mathcal{F})$.
+
+If $f$ is a nonnegative measurable function $F\to \mathbb{R}$ then
+\begin{align}
+    Kf(x) = \int_F K(x,dy)f(y), \qquad x\in E
+\end{align}
+is a nonnegative measureable function $E\to \mathbb{R}$.
+
+If $L$ is a Markov kernel from $(F,\mathcal{F})$ to $(G,\mathcal{G})$, then
+\begin{align}
+    KL(x,B) = \int_F K(x,dy) L(y,B),\qquad x\in E, B\in \mathcal{G}
+\end{align}
+is a Markov kernel from $(E,\mathcal{E})$ to $(G,\mathcal{G})$. \cite{cinlar_probability_2011}
+\end{definition}
+
+\begin{definition}[Graphical measure-kernel composition]\label{def:kernel_graphical_composition}
+If $K$ is a Markov kernel from $(E,\mathcal{E})$ to $(F,\mathcal{F})$ and $\mu$ is a probability measure on $(E,\mathcal{E})$, then
+
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =2 cm and 3cm ,on grid ,
+semithick ,
+variable/.style ={ circle ,top color =white , 
+draw , text=blue , minimum width =1 cm},
+kernel/.style={rectangle,draw}
+]
+\node[kernel] (K) [left] {$K$};
+\node (A) [left of = K] {$\mu$};
+\node (E) [right = 1cm of K] {};
+\draw (A) -- (K);
+\draw (K) -- (E);
+\end{tikzpicture}
+\end{center}
+
+represents the measure
+\begin{align}
+    \pi (A\times B)=\int_A \mu(dx_1) \int_B K(x_1, dx_2),\qquad A\in \mathcal{E}, B\in\mathcal{F}
+\end{align}
+
+This can be applied recursively, so given kernels $K_1$ from $(E,\mathcal{E})$ to $(F,\mathcal{F})$ and $K_2$ from $(F,\mathcal{F})$ to $(G,\mathcal{G})$, the diagram
+
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =2 cm and 3cm ,on grid ,
+semithick ,
+variable/.style ={ circle ,top color =white , 
+draw , text=blue , minimum width =1 cm},
+kernel/.style={rectangle,draw}
+]
+\node[kernel] (K1) [left] {$K_1$};
+\node[kernel] (K2) [right of = K1] {$K_2$};
+\node (A) [left of = K1] {$\mu$};
+\node (E) [right = 1cm of K2] {};
+\draw (A) -- (K1);
+\draw (K1) -- (K2);
+\draw (K2) -- (E);
+\end{tikzpicture}
+\end{center}
+
+represents the measure
+\begin{align}
+    \pi (A\times B\times C)=\int_A \mu(dx_1) \int_B K_1(x_1, dx_2) \int_C K_2(x_2,dx_3),\qquad A\in \mathcal{E}, B\in\mathcal{F}, C\in \mathcal{G}
+\end{align}
+
+It is also possible to apply kernels ``in parallel''. Given kernels $K_a$ from $(E,\mathcal{E})$ to $(F,\mathcal{F})$ and $K_b$ from $(E,\mathcal{E})$ to $(G,\mathcal{G})$, the diagram
+
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =1 cm and 4cm ,on grid ,
+semithick ,
+variable/.style ={ circle ,top color =white , 
+draw , text=blue , minimum width =1 cm},
+kernel/.style={rectangle,draw}
+]
+\node (A) [left] {$\mu$};
+\node[inner sep=0pt] (S) [right = 1cm of A] {};
+\node[kernel] (Ka) [above right = 1cm and 2cm of S] {$K_a$};
+\node[kernel] (Kb) [below right = 1cm and 2cm of S] {$K_b$};
+\node (E) [right = 1cm of Ka] {};
+\node (F) [right = 1cm of Kb] {};
+\draw[-] (A) -- (S);
+\draw (S) .. controls +(down:5mm) and +(left:10mm) .. (Kb);
+\draw (S) .. controls +(up:5mm) and +(left:10mm) .. (Ka);
+\draw (Ka) -- (E);
+\draw (Kb) -- (F);
+\end{tikzpicture}
+\end{center}
+
+represents the measure
+\begin{align}
+    \pi (A\times B\times C)=\int_A \mu(dx_1) \int_B K_a(x_1, dx_2) \int_C K_b(x_1,dx_3),\qquad A\in \mathcal{E}, B\in\mathcal{F}, C\in \mathcal{G}
+\end{align}
+
+Parallel and series application can be interchangeably composed. These diagrams are based on the work of Fong \cite{fong_causal_2013}.
+
+\end{definition}
+
+We define measure spaces for the history $H$, observations $A$, outcomes $V$, interventions $I$ and policy index $Q$ in Table \ref{tab:measure_spaces}.
+We further define Markov kernels for observation $\theta$, policy choice $\pi$, policy implementation $\phi$ and resolution $\mu$. The history $H$ is equipped with a probability measure $P_H$.
+
+% \begin{table}[h]
+%     \centering
+%     \begin{tabular}{c|c|c|c}
+%         Name & Set & $\sigma$-algebra & Probability Measure \\
+%         \hline
+%         History & $H$ & $\mathcal{H}$ & $P_H$ \\
+%         Observations & $A$ & $\mathcal{A}$ & $P_H \theta$\\
+%         Outcomes & $V$ & $\mathcal{V}$ & $P_H^3 \mu (\mathbb{I}\times \phi) (\mathbb{I}\times \theta \times \pi)$\\
+%         Interventions & $I$ & $\mathcal{I}$ & $P_H^2 \phi (\theta_t \times \pi_t)$ \\
+%         Policy index & $Q$ & $\mathcal{Q}$ & $P_H \pi$
+%     \end{tabular}
+%     \caption{Measure space names and definitions}
+%     \label{tab:measure_spaces}
+% \end{table}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c|c|c}
+        Name & Set & $\sigma$-algebra & Intuition \\
+        \hline
+        History & $H$ & $\mathcal{H}$ & Everything that could have a causal effect on $I$ or $V$ \\
+        Accounted Variables & $A$ & $\mathcal{A}$ & Variables that are accounted for in the choice of intervention\\
+        Outcomes & $V$ & $\mathcal{V}$ & Variables that are relevant to the cost \\
+        Interventions & $I$ & $\mathcal{I}$ & Things that we're permitted to ``do''  \\
+        Unaccounted Variables & $Q$ & $\mathcal{Q}$ & Variables that affect the choice of intervention but are unaccounted for
+    \end{tabular}
+    \caption{Measure space names and definitions}
+    \label{tab:measure_spaces}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c|c}
+        Name & Symbol & Type signature  \\
+        \hline
+        Observation & $\theta$ & $H\to \Delta(\mathcal{A})$ \\
+        Policy choice & $\pi$ & $H\to \Delta(\mathcal{Q })$ \\
+        Policy implementation & $\phi$ & $A\times Q\to \Delta(\mathcal{I})$ \\
+        Resolution & $\mu$ & $H\times I \to \Delta(\mathcal{V})$  \\
+    \end{tabular}
+    \caption{Markov kernel definitions.}
+    \label{tab:kernels}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c|c}
+        Symbol & Type signature & Function  \\
+        \hline
+        & & \\
+        $\hat{S}$ (for any measurable set $S$) & $S\to S$ & Identity: $\hat{S}(s)=s$ \\
+    \end{tabular}
+    \caption{Random variable definitions.}
+    \label{tab:kernels}
+\end{table}
+
+Consider the joint probability measure $P:\mathcal{H}\times \mathcal{A}\times \mathcal{I}\times \mathcal{Q}\times \mathcal{V}\to [0,1]$ defined by the following composition of $P_H$ and kernels in table \ref{tab:kernels}:
+
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =1 cm and 4cm ,on grid ,
+semithick ,
+variable/.style ={ circle ,top color =white , 
+draw , text=blue , minimum width =1 cm},
+kernel/.style={rectangle,draw}
+]
+\node[kernel] (Kmu) [right] {$\mu$};
+\node[kernel] (Kphi) [above left = 2cm and 2cm of Kmu] {$\phi$}
+    edge[bend left] (Kmu);
+\node[kernel] (Ktheta) [above left = 1cm and 2cm of Kphi] {$\theta$}
+    edge[bend left] (Kphi);
+\node[kernel] (Kpi) [below left = 1cm and 2cm of Kphi] {$\pi$}
+    edge[bend right] (Kphi);
+\node[inner sep=0pt] (S) [below left = 1cm and 2cm of Ktheta] {}
+    edge[bend left] (Ktheta)
+    edge[bend right] (Kpi)
+    edge[bend right = 50] (Kmu);
+\node (A) [left = 1cm of S] {$P_H$}
+    edge[-] (S);
+\draw (Kmu.east) -- +(1,0);
+\end{tikzpicture}
+\end{center}
+
+If we take the sets $H,A,V,I,Q$ to be countable with discrete $\sigma$-algebras, the probability distribution generated by this composition can be written
+
+\begin{align}
+    P(h,a,q,i,v) = P_H(h)\theta(h,a)\pi(h,q)\phi(q,a,i)\mu(h,i,v)
+\end{align}
+
+We will call the distribution $P$ the causal model generated by $P_H(h)$ and the kernels $\theta,\pi,\phi,\mu$.
+
+Using a more familiar graphical notation, this probability distribution factorises according to the following DAG, which can make it easy to work out conditional independences:
+
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =2 cm and 3cm ,on grid ,
+semithick ,
+state/.style ={ circle ,top color =white ,
+draw , text=blue , minimum width =1 cm}]
+\node[state] (H) [left] {$H$};
+\node[state] (A) [above right = of H] {$A$};
+\node[state] (Q) [right = of H] {$Q$};
+\node[state] (I) [right = of Q] {$I$};
+\node[state] (V) [below right = of I] {$V$};
+\draw (H) -- (A);
+\draw (H) -- (Q);
+\draw (H) -- (V);
+\draw (A) -- (I);
+\draw (Q) -- (I);
+\draw (I) -- (V);
+\end{tikzpicture}
+\end{center}
+
+Some notes on this setup:
+\begin{itemize}
+    \item $P$ is a very model in which an intervention $I$ and an outcome $V$ are resolved by arbitrary Markov kernels from some history $H$ and (need to prove arbitrary kernel $K:H\to I$ can be "factored" in to $\pi$, $\theta$ and $\phi$)
+    \item A model formed by composition of Markov kernels is quite similar to an instance of a structural causal model (definition \ref{def:structural_equation})
+    \item Any fixed value of $Q$ corresponds to a particular Markov kernel $\phi(\cdot,q,\cdot):A\to \Delta (\mathcal{I})$
+\end{itemize}
+
+\subsection{Policy-based causal identifiability}
+
+We are ultimately concerned with situations where an agent wants to minimise a cost $C:\Delta (I\times V)\to \mathbb{R}$. If we suppose the agent knows the joint probability $P(i,a,v) = \sum_{q\in Q} P(q) P(v|i,a,q) \phi(a,q,i) P(a|q) $, a simple approach to minimising the cost would be to choose a kernel $\phi_{q^*}\in \Phi_u$ where $\Phi_q=\{\phi(\cdot,q,\cdot)|q\in Q\}$ is a set of kernels $A\to\Delta(\mathcal{I})$ and
+
+\begin{align}
+    \phi_{\tilde{q}}(a,i) = \argmin_{\phi_q\in \Phi_q} C \left( \sum_A P(V|I,A) \phi_q(A,I) P(A)\right)
+\end{align}
+
+By construction, there exists $\tilde{q}\in Q$ such that $\phi_{\tilde{q}}=\phi(\cdot,\tilde{q},\cdot)$. It may not be the case, however, that $\tilde{q}$ is in fact the policy that optimises the cost.
+
+\begin{example}[Useless medicine]
+We use the example of useless medicine to illustrate where naive cost minimization might go awry. $S:\mathcal{H}\to \{0,1\}$ is information on whether or not someone is sick, $I=\{0,1\}$ is a variable representing whether or not they received treatment and $V=\{0,1\}$ is a variable representing whether or not they recovered. We are aiming (perhaps unwisely) to maximise recovery, while avoiding unnecessary treatment: $C(P(i,v))=-\mathbb{E}[V-0.5I]$. 
+
+Suppose that the treatment does nothing, but sick people always recover anyway: $P(v|i,s) = P(v|s) = \delta_{vs}$. Suppose furthermore that only sick people are treated. That is, given $Q=\{0,1\}$ and $\phi$ such that $\phi(\_,q,i)=\delta_{qi}$, we have $\pi(q,s)=\delta_{qs}$. We take $A=\emptyset$
+
+The above assumptions lead straightforwardly to $P(v|i)=\delta_{vi}$, a typical case of ``correlation is not causation''. Recovery is perfectly matched with treatment, but this is contingent on the unwise choice of policy in which only sick people were treated. If people were treated randomly we would find that recovery was independent of treatment.
+
+Returning to our cost function, it would naively appear that the policy $\phi_{q1}:A\mapsto \delta_{i1}$ is optimal:
+
+\begin{align}
+    C(P(v|i)\delta_{i1}) &= 0.5\\
+    C(P(v|i)\delta_{i0}) &= 0
+\end{align}
+
+However, if we adjust for $S$ we find that we should not treat. $P(v|i,q,s)=P(v|s)$ and so $P(i,v|q,s)=P(v|s)P(i|q)$ and
+
+\begin{align}
+    C(P(v|s)P(i|q)) = 0.5q - s
+\end{align}
+
+Here, the problem was that the set $A=\emptyset$ was not large enough. If $S$ were in $\mathcal{A}$ we could have correctly concluded that sickness and not treatment was driving recovery.
+\end{example}
+
+We are interested in conditions under which some procedure will allow an agent to find an optimal policy  $\phi_*: A\to \Delta(\mathcal{I})$. There are two competing notions for optimality, which are loosely associated with the competing schools of Causal Decision Theory (CDT) and Evidential Decision Theory (EDT).
+
+We index notions of optimality with elements $\mathbf{h}_\alpha$ of sub-$\sigma$-algebras of $\mathcal{H}$. This is because in general the conditions under which we optimize may be different from the conditions under which we collect data (e.g. "test" vs "deployment" or "experimental" vs "real-world" environments), which we will label $\mathbf{h}_0$ and $\mathbf{h}_\alpha$ respectively. In particular, the marginal probabilities $P(q|\mathbf{h}_0)\neq P(q|\mathbf{h}_\alpha)$.
+
+\begin{definition}[$\mathbf{h}_\alpha$-counterfactual optimality]
+Given a causal model $P$ generated by $\langle P_H,\theta,\pi,\phi,\mu\rangle$ and $\pi':H\to \Delta(Q)$, define $P_{\pi'}$ as the model generated by $\langle P_H,\theta,\pi,\phi,\mu\rangle$. For each $q\in Q$, define $\pi_q:H\mapsto \delta_q$. Given a sub-$\sigma$-algabra $\mathcal{H}_\alpha$ of $\mathcal{H}$, the $\mathbf{h}_\alpha$-counterfactually optimal policy choice is
+\begin{align}
+    q^*_{cf}=\argmin_{q\in Q}C(P_{\pi_q}(i,v|\mathcal{H}_\alpha=\mathbf{h}_\alpha))
+\end{align}
+\end{definition}
+
+\begin{remark}
+$P_{\pi_q}(\cdot)$ could also be written as $P(\cdot|do(Q=q))$.
+\end{remark}
+
+\begin{definition}[$\mathbf{h}_\alpha$-conditional optimality]
+Given a causal model $P$ generated by $\langle P_H,\theta,\pi,\phi,\mu\rangle$ and a sub-$\sigma$-algabra $\mathcal{H}_\alpha$ of $\mathcal{H}$ and $\mathbf{h}_\alpha \in \mathcal{H}_\alpha$, the $\mathbf{h}_\alpha$-conditionally optimal policy choice is
+\begin{align}
+    q^*_{cd} = \argmin_{q\in Q} C(P(i,v|q,\mathcal{H}_\alpha=\mathbf{h}_\alpha))
+\end{align}
+\end{definition}
+
+\begin{definition}[Agnostic optimality]
+A policy choice $q^*$ is $\mathbf{h}_\alpha$-agnostically optimal if $q^*=q^*_{cd}=q^*_{cf}$.
+\end{definition}
+
+\begin{definition}[$\mathbf{h}_0,\mathbf{h}_\alpha$-Optimizability]
+A causal model $P$ along with sub-$\sigma$-algebras $\mathcal{H}_0,\mathcal{H}_\alpha\subset \mathcal{H}$ is $\mathbf{h}_0,\mathbf{h}_\alpha$-optimizable if, given  $P(i,a,v|\mathcal{H}_0=\mathbf{h}_0)$, it is possible to find a $\mathbf{h}_\alpha$-optimal $q\in Q$.
+
+Here ``optimal'' is understood to be any of counterfactually optimal, conditionally optimal or agnostically optmial.
+\end{definition}
+
+\textbf{Note: } $P(i,a,v|\mathcal{H}_\cdot=h_\cdot)=\mathbb{E}[\mathds{1}_{I=i,A=a,V=v}|\mathcal{H}_\cdot=h_\cdot]$
+
+Noting that the naive approach to optimising the cost may not be the only possibility, we will for now ask under what conditions it does yield an optimal policy selection. We will assume that the joint probability $P(i,a,v|\mathcal{H}_0=\mathbf{h}_0)$ is known, and the proposed policy choice is
+
+\begin{align}
+    \tilde{q} = \argmin_{q\in Q} C \left( \sum_{a\in A} P(v|i,a,\mathbf{h}_0) \phi(a,q,i) P(a|\mathbf{h}_0)\right)
+\end{align}
+
+Note that this strategy ought to work if the quantity $\sum_a P(v|i,a) \phi_q(a,i) P(a) = P(i,v|q)$ for all $q\in Q$. We will formalise this below:
+
+\begin{definition}[$\mathbf{h}_0$-Identifiability]
+A model $P$ along with $\mathcal{H}_0\subset\mathcal{H}$ is $\mathbf{h}_0$-identifiable if for all $q,q'\in Q$
+\begin{align}
+    \sum_{a\in A} P(i,a,v|q,h_\beta)=\sum_{a\in A} P(v|i,a,q',h_\beta) \phi(a,q,i) P(a|q',h_\beta) 
+\end{align}
+Where $P(\cdot | \mathbf{h}_0)=P(\cdot | \mathcal{H}_0 = \mathbf{h}_0)$
+\end{definition}
+
+\begin{definition}[$\mathbf{h}_0$-Policy exchangeability]
+A model $P$ along with $\mathcal{H}_0\subset\mathcal{H}$ is $\mathbf{h}_0$-policy exchangeable if for all $q,q'\in Q$
+\begin{align}
+    P(v|i,a,q,\mathbf{h}_0) = P(v|i,a,q',\mathbf{h}_0)
+\end{align}
+Where $P_{\mathbf{h}_0}=P(h,q,a,i,v|\mathcal{H}_\beta=\mathbf{h}_0)$. If $\phi(a,q,i)=0$, then $P(v|i,a,q,\mathbf{h}_0)$ may be defined by substituting $\phi_{\epsilon}(a,q,i) = (1-\epsilon)\phi(a,q,i) + \epsilon$ for $\phi$ and taking the limit of $\phi_{\epsilon}$ as $\epsilon \to 0$.
+\end{definition}
+
+\begin{definition}[$\mathbf{h}_0$-Policy uncorrelatedness]
+A model $P$ along with $\mathcal{H}_0\subset\mathcal{H}$ is $\mathbf{h}_0$-policy uncorrelated if for all $q\in Q$
+
+\begin{align}
+    \sum_{a\in A} P(v|i,a,q,\mathbf{h}_0)\phi(a,q,i) P(a|q,\mathbf{h}_0) = \sum_{a\in A} P(v|i,a,q,\mathbf{h}_0)\phi(a,q,i) P(a|\mathbf{h}_0)
+\end{align}
+
+A particularly simple case of policy uncorrelatedness is when
+\begin{align}
+    A\CI_{P_{\mathbf{h}_0}} Q
+\end{align}
+\end{definition}
+
+\begin{definition}[$\mathbf{h}_0,\mathbf{h}_\alpha$-stability]
+Given sub-$\sigma$-algebras $\mathcal{H}_0,\mathcal{H}_\alpha\subset \mathcal{H}$, a model $P$ is $\mathbf{h}_0,\mathbf{h}_\alpha$-outcome-stable if
+\begin{align}
+    P(v|i,a,q,\mathbf{h}_0) = P(v|i,a,q,\mathbf{h}_\alpha)
+\end{align}
+
+A model $P$ is $\mathbf{h}_0,\mathbf{h}_\alpha$-observation-stable if
+\begin{align}
+    P(a|q,\mathbf{h}_0) = P(a|q,\mathbf{h}_\alpha)
+\end{align}
+
+A model $P$ is $h0,\mathbf{h}_\alpha$-stable iff it is $\mathbf{h}_0,\mathbf{h}_\alpha$-outcome-stable and $\mathbf{h}_0,\mathbf{h}_\alpha$-observation-stable.
+
+\end{definition}
+
+\begin{definition}[Common support]
+% A model $P$ has $h_\beta$-common policy support if for all $h\in h_\beta$, $q\in Q$
+% \begin{align}
+%     \pi(h,q) > 0
+% \end{align}
+A model $P$ has $h_\beta$-common observation support if for all $a\in A$, $q\in Q$
+\begin{align}
+    P(a|q) > 0
+\end{align}
+
+A model $P$ has $h_\beta,q$-common intervention support if for all $i\in I$, $a\in A$
+\begin{align}
+    \phi(a,q,i) > 0
+\end{align}
+
+A model with common observation and common intervention support has common support.
+\end{definition}
+
+\begin{theorem}[Policy Exchangeability and Uncorrelatedness implies Identifiability]
+A model $P_H(h),\theta,\pi,\phi,\mu$ that is $h_\beta$-policy exchangeable and $h_\beta$-policy uncorrelated is $h_\beta$-identifiable.
+\end{theorem}
+
+\begin{proof}
+For any $q\in Q$
+\begin{align}
+    \sum_{a\in A} P_{h_\beta}(v,i,a|q) &= \sum_{a\in A} P_{h_\beta}(v|i,a,q)\phi(a,q,i) P_{h_\beta}(a|q) \\
+                             &= \sum_{a\in A} P_{h_\beta}(v|i,a,q) \phi(a,q,i) P_{h_\beta}(a|q')\qquad\forall q'\in Q\text{ (policy uncorrelatedness)}\\
+                             &= \sum_{a\in A} P_{h_\beta}(v|i,a,q') \phi(a,q,i) P_{h_\beta}(a|q')\qquad\text{(policy exchangeability)}
+\end{align}
+\end{proof}
+
+\begin{theorem}[$\mathbf{h}_0$-identifiability + $\mathbf{h}_0$ common support + $\mathbf{h}_\alpha,\mathbf{h}_0$-stability implies $\mathbf{h}_\alpha,\mathbf{h}_0$-conditional optimizability]\label{th:conditional_optzy}
+Given a model $P$, it is possible to find an $\mathbf{h}_\alpha$-conditionally optimal $q^*_{cd}$ given $P(a,i,v|\mathbf{h}_0)$ if $P$ is $\mathbf{h}_0$-identifiable and $\mathbf{h}_\alpha,\mathbf{h}_0$-stable.
+\end{theorem}
+
+\begin{proof}
+We have for all $q\in Q$
+
+\begin{align}
+   P(i,v|q,\mathbf{h}_\alpha)&=\sum_{a\in A} P(v|i,a,q,\mathbf{h}_0) \phi(a,q,i) P(a|q,\mathbf{h}_0) \qquad\text{(stability)}\\
+                    &=\sum_{a\in A} P(v|i,a,\mathbf{h}_0) \phi(a,q,i) P(a|\mathbf{h}_0) \qquad (\mathbf{h}_0\text{-identifiability})\\
+                    &=\sum_{a\in A} \frac{P(a,i,v|\mathbf{h}_0)}{P(a,i|\mathbf{h}_0)} \phi(a,q,i) P(a|\mathbf{h}_0)\qquad\text{(common support)}
+\end{align}
+
+for conditional $\mathbf{h}_0,\mathbf{h}_\alpha$-optimizability:
+\begin{align}
+    q^*_{cd} &= \argmin_{q\in Q} P(i,v|q,\mathbf{h}_\alpha)
+\end{align}
+\end{proof}
+
+Counterfactual optimizability follows from an alternative, stronger version of the exchangeability assumption. On the other hand, we drop the stability assumption as it is something we will revisit later.
+
+\begin{definition}[$\mathbf{h}_0$-Counterfactual policy exchangeability]
+A model $P$ along with $\mathcal{H}_0\subset\mathcal{H}$ is $\mathbf{h}_0$-counterfactually policy exchangeable if for all $q\in Q$ and all kernels $\pi_q:h\mapsto \delta_q$:
+\begin{align}
+    P(v|i,a,q,\mathbf{h}_0) = P_q(v|i,a,\mathbf{h}_0)
+\end{align}
+Where $P_q$ is the causal model generated by replacing $\pi$ with $\pi_q$ in the set of kernels generating $P$.
+\end{definition}
+
+\begin{lemma}[Counterfactual exchangeability implies exchangeability]\label{le:cfex_im_ex}
+If a model $P$ is $\mathbf{h}_0$-counterfactually exchangeable then it is $h0$-exchangeable.
+\end{lemma}
+
+\begin{proof}
+For all $q,q'\in Q$
+\begin{align}
+    P_q(v|i,a,\mathbf{h}_0) &= \frac{\sum_{h\in \mathbf{h}_0, x\in Q} \mu(i,h,v) \phi(a,q,i) \theta(h,a)\delta_{xq} P_H(h|\mathbf{h}_0)}{\sum_{h\in \mathbf{h}_0, x\in Q} \phi(a,q,i)\theta(h,a)\delta_{xq} P_h(h|\mathbf{h}_0)}\\
+                    &= \frac{\sum_{h\in \mathbf{h}_0}\mu(i,h,v)\theta(h,a)P_H(h|\mathbf{h}_0)}{\sum_{h\in \mathbf{h}_0} \theta(h,a) P_H(h|\mathbf{h}_0)}\\
+                    &= P_{q'}(v|i,a,\mathbf{h}_0)
+\end{align}
+
+Then we have for all $q,q'\in Q$
+\begin{align}
+    P(v|i,a,q,\mathbf{h}_0) &= P_q(v|i,a,\mathbf{h}_0) \\
+                   &= P_q'(v|i,a,\mathbf{h}_0) \\
+                   &= P(v|i,a,q,\mathbf{h}_0)
+\end{align}
+\end{proof}
+
+\begin{corrolary}[Counterfactual exchangeability and policy exchange]\label{corr:cfex_pex}
+If follows from Lemma \ref{le:cfex_im_ex} that if a model $P$ is $\mathbf{h}_0$-counterfactually exchangeable then for all $q,q'\in Q$
+\begin{align}
+    P(v|i,a,\mathbf{h}_0) = P_{q'}(i,a,\mathbf{h}_0)
+\end{align}
+\end{corrolary}
+
+
+
+\begin{theorem}[$\mathbf{h}_0$-counterfactual exchangeability + $\mathbf{h}_0$-policy uncorrelatedness + $\mathbf{h}_0$-common support +  implies $\mathbf{h}_0$-counterfactual optimizability]
+
+Given a model $P$, it is possible to find an $\mathbf{h}_0$-counterfactually optimal $q^*_{cf}$ given $P(a,i,v|\mathbf{h}_0)$ if $P$ is $\mathbf{h}_0$-counterfactually exchangeable, $\mathbf{h}_0$-policy uncorrelated and has $\mathbf{h}_0$-common support.
+\end{theorem}
+
+\begin{proof}
+
+From Corollary \ref{corr:cfex_pex}, we have for all $q\in Q$
+\begin{align}
+    P(v|i,a,\mathbf{h}_0) = P_{q}(v|i,a,\mathbf{h}_0) \label{eq:cfex}
+\end{align}
+
+We also have for any $q\in Q$
+\begin{align}
+    P_q(a|\mathbf{h}_0) &= \sum_{h\in \mathbf{h}_0} \theta(h,a) P_H(h|\mathbf{h}_0) \nonumber\\
+               &= P(a|\mathbf{h}_0)\qquad \text{(Policy uncorrelatedness)} \label{eq:cfun}
+\end{align}
+
+Thus, for any $q\in Q$
+\begin{align}
+    P_q(i,v|\mathbf{h}_0) &= \sum_{a\in A} P_q(v|i,a,\mathbf{h}_0) \phi(a,q,i) P_q(a|\mathbf{h}_0) \\
+                 &= \sum_{a\in A} P(v|i,a,\mathbf{h}_0) \phi(a,q,i) P(a|\mathbf{h}_0) \\
+                 &= \sum_{a\in A} \frac{P(a,i,v|\mathbf{h}_0)}{P(a,i|\mathbf{h}_0)} \phi(a,q,i) P(a|\mathbf{h}_0) \qquad\text{(common support)}
+\end{align}
+
+It is then straightforward to find
+\begin{align}
+    q^*_{cf} = \argmin_{q\in Q} (P_q(i,v|\mathbf{h}_0))
+\end{align}
+\end{proof}
+
+\subsection{Relating the conditional and counterfactual perspectives}
+
+The relationship between the conditional and counterfactual perspectives and the identifiability assumptions are significantly simplified by introducing sun-$\sigma$-algebras associated with the kernels $\mu$, $\pi$ and $\theta$:
+
+\begin{align}
+    \mathcal{H}_\mu &= \sigma(\cup_{\mathbf{v}\in \mathcal{V}} \mu^{-1}(\mathcal{H},\mathbf{v}))\\
+    \mathcal{H}_\pi &= \sigma(\cup_{\mathbf{q}\in \mathcal{Q}} \mu^{-1}(\mathcal{H},\mathbf{q}))\\
+    \mathcal{H}_\theta &= \sigma(\cup_{\mathbf{a}\in \mathcal{A}} \mu^{-1}(\mathcal{H},\mathbf{a}))\\
+\end{align}
+
+where for some kernel $K$ from $(E,\mathcal{E})$ to $(F,\mathcal{F})$ and $B\in \mathcal{F}$:
+\begin{align}
+    K^{-1}(\mathcal{E},B) &= \{K^{-1}(A,B)|A\in\sigma([0,1])\} \\
+    K^{-1}(A,B) &= \{e|K(e,B)\in A\}
+\end{align}
+
+For each $q\in Q$, define $\tilde{\mathbf{h}}_q=\{\mathbf{h}|\mathbf{h}\in \mathcal{H}\wedge \phi(h,q')=\delta_{qq'}\forall h\in \mathbf{h}\}$ and consider the set $\mathbf{h}_q=\cap_{\mathbf{h}\in \tilde{\mathbf{h}}_q}\mathbf{h}$. For any non-empty $\mathbf{h}_q$, we have $P(h,q,a,i,v|\mathbf{h}_q)=P_q(h,q,a,i,v|\mathbf{h}_q)$. 
+
+Then, for any model that is $\mathbf{h}_0,\mathbf{h}_q$-stable, we have
+\begin{align}
+    P(v|i,a,q,\bf{h}_0) = P_q(v|i,a,\bf{h}_q)
+\end{align}
+
+
+% In either case, we have for $q\in Q$
+% \begin{align}
+%     P(I_0,V_0|q) &= \int_{A} P(da|q) \int_{I_0} P(di|a,q) \int_{V_0} P(dv|i,a,q) \\
+%                  &= \int_{A} P(da|q) \int_{I_0} \phi(a,q,di) \int_{V_0} P(dv|i,a,q)
+% \end{align}
+
+Additionally, we need to ensure that we can estimate $P(v|i,a)$ and $P(a)$. That is, we require \emph{common support}:
+\begin{align}
+    \phi(a,q,i) &> 0  \qquad \text{for all }a\in A, i\in I \\
+    P(a|q) &> 0 \qquad \text{for all }a\in A
+\end{align}
+
+The setting so far is quite abstract, and it's not necessarily obvious when we should expect Equations \ref{eq:policy_choice} and \ref{eq:policy_exchange} to hold. An intuitively appealing situation in which these assumptions \emph{do} hold is where $V$ and $Q$ each depend on independent components of $H$.
+
+Suppose we introduce Markov kernels $\nu_A:H\to\Delta(H_A)$ and $\nu_Q:H\to\Delta(H_Q)$ and redefining $\pi$, $\theta$ and $\mu$ such that $\theta:H_A\to \Delta(A)$, $\pi:H_Q\to \Delta(Q)$ and $\mu:H_A\times I\to \Delta (V)$. Again abusing notation to let set names also stand for random variables given by identity functions, suppose that we have $H_A \CI H_Q$.
+
+These properties allow us to draw a modified Bayesian network for $P$, substituting $H_A$ and $H_Q$ for $H$. Via the d-separation criterion, we clearly have conditions \ref{eq:policy_choice} and \ref{eq:policy_exchange}.
+\textbf{Prove this}
+
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =2 cm and 3cm ,on grid ,
+semithick ,
+state/.style ={ circle ,top color =white ,
+draw , text=blue , minimum width =1 cm}]
+\node[state] (H) [left] {$H$};
+\node[state] (H_A) [right of = H] {$H_A$};
+\node[state] (H_Q) [below = 3cm of H_A] {$H_Q$};
+\node[state] (A) [right = of H_A] {$A$};
+\node[state] (Q) [right = of H_Q] {$Q$};
+\node[state] (I) [right = of Q] {$I$};
+\node[state] (V) [below right = 1.5cm and 3cm of H_A] {$V$};
+\draw (H) -- (H_A);
+\draw (H) -- (H_Q);
+\draw (H_A) -- (A);
+\draw (H_Q) -- (Q);
+\draw (H_A) -- (V);
+\draw (A) -- (I);
+\draw (Q) -- (I);
+\draw (I) -- (V);
+\end{tikzpicture}
+\end{center}
+
+Given the assumed independence of $H_A$ and $H_Q$, the independences \ref{eq:policy_choice} and \ref{eq:policy_exchange} follow from these assumptions.
+
+\textbf{Proof sketch: } \emph{Conjecture} Because $H_A$ is independent of $H_Q$ and all dependence on $H$ is screened off by these variables, independence relations among the rest of the variables can be found by d-separation on the graph formed by deleting $H$.
+
+Independences \ref{eq:policy_choice} and \ref{eq:policy_exchange} follow from d-separation on this modified graph. $\square$
+
+This stronger set of assumptions, I think, maps reasonably well to ordinary intuitions about why we should expect an idealised randomised trial to give us policy relevant information. We expect that the choice of treatment assignment function $Q$ is influenced by factors that are independent of anything that influences the outcomes $V$. If the treatment assignment $I$ does depend on any outcome-related variables $H_A$, this influence is screened off by the observed set $A$, which we know because we have dictated the relationship between $A$ and $I$. Finally, the map $\phi(\cdot,q,\cdot)$ from $A$ to $I$ must be sufficiently random in order to achieve common support. 
+
+\subsubsection{Connection to CBN identifiability}
+
+Commonalities:
+
+\begin{itemize}
+    \item There's a natural identification of $P(V|do(I=i_0))$ with a policy choice $q_0$ such that $\phi(a,q_0,\{i\}):A\mapsto \delta_{ii_0}$ for all $a\in A$.
+    \item The argument above considers probability spaces related by Markov kernels, which generate Bayesian networks. As such, independence results for Bayesian networks are relevant
+    \item In particular, the ``independent histories'' assumption produces a graph in which the backdoor criterion does hold for the effect of $I$ on $V$
+\end{itemize}
+
+Differences:
+
+\begin{itemize}
+    \item The policy based approach works with regular Bayesian networks without $do()$ operations. I believe there are variables that can be represented this way that can't be represented in a Bayesian network with a $do()$ operation (e.g. two-way interactions), but I need to show this
+    \item I believe that if we adopt a time dependent approach (i.e. introduce sub-$\sigma$-algebras $\mathcal{H}_t\subset \mathcal{H}$ that capture the set of possible histories up to $t$), there are cases where knowing $P(V|do(I=i))$ for each $i\in I$ is insufficient to deduce the optimal policy $Q$. Again, I need to show this.
+\end{itemize}
+
+\subsubsection{Connection to potential outcomes identifiability}
+
+Commonalities:
+
+\begin{itemize}
+    \item There's a natural identification of the potential outcomes idea of a true outcome $V(1)$ with a policy choice $q_1$ such that $\phi(a,q_1,\{i\}):A\mapsto \delta_{i1}$ for all $a\in A$.
+    \item Under the identification above, the policy exchangeability assumption (\ref{eq:policy_exchange}) is a natural generalisation of the ignorability assumption
+    \item The common support assumption is also present in the potential outcomes approach, though the common support assumption here includes the additional condition that $P(a|q) > 0$ for all $a\in A$
+\end{itemize}
+
+Differences:
+
+\begin{itemize}
+    \item Under a time dependent approach, ignorability may hold where policy exchangeability doesn't
+    \item The potential outcomes approach doesn't involve composition of Markov kernels, and arguably doesn't formally distinguish between elements of $A$ which have a ``causal'' effect on intervention $I$ and elements of $V$ that are ``effects'' of $I$
+    \item The potential outcomes approach doesn't feature a free policy choice assumption (\ref{eq:policy_choice}).
+\end{itemize}
+
+
+\subsection{Independence of Identifiability Assumptions}
+
+Given that the potential outcomes approach features common support and policy exchangeability assumptions but not the free policy choice assumption, it is reasonable to ask whether these assumptions are independent. It turns out that they are.
+
+\subsubsection{Policy Exchange and Policy Choice are independent}
+
+Consider a randomised medical trial with variables $X,T\in \mathcal{A}$ where $X\in\{0,1\}$ is a variable indicating experimental conditions and $T$ is a variable summarising patient characteristics. Suppose that the joint distribution of variables is compatible with this graph:
+
+\begin{center}
+\begin{tikzpicture}[-latex ,auto ,node distance =2 cm and 3cm ,on grid ,
+semithick ,
+vble/.style ={ circle ,top color =white , 
+draw , text=blue , minimum width =1 cm}
+]
+\node[vble] (Ha) [left] {$H_A$};
+\node[vble] (Hq) [below of = Ha] {$H_Q$};
+\node[vble] (Q) [right = 3cm of Hq] {$Q$}
+    edge[latex-] (Hq);
+\node[vble] (X) [right = 3cm of Ha] {$X$}
+    edge[latex-] (Hq);
+\node[vble] (T) [above of = X] {$T$}
+    edge[latex-] (Ha);
+\node[vble] (I) [right = 3cm of X] {$I$}
+    edge[latex-] (T)
+    edge[latex-] (Q);
+\node[vble] (V) [right = 1.5cm of X] {$V$}
+    edge[latex-] (X)
+    edge[latex-] (T)
+    edge[latex-] (I);
+\end{tikzpicture}
+\end{center}
+
+In words, the outcome depends on the treatment, the patient characteristics and whether or not the treatment is administered under experimental conditions. Suppose also that $Q$ is such that under experimental conditions, $\phi$ is randomised over possible values of $I$, while under non-experimental conditions is is deterministic.
+
+Note that $\{I,X\}$ d-separates $V$ from $Q$, so policy exchangeability holds. However, it is possible to postulate a treatment that is only effective under experimental conditions, in which case the policy suggested by measurements with randomised policy choice $Q$ will not be effective.
+
+If we remove $X$ from the observed set $A$, $A$ will no longer d-separate $V$ from $Q$. However, $A$ is now d-separated from $Q$ by the empty set. Thus in this case policy choice holds, but policy exchangeability does not.
+
+\subsubsection{Policy Exchange, Policy Choice and Common Support are independent}
+
+In the example above, the common support assumption is violated - in particular, a randomised policy choice $Q$ always coincides with $X=1$. This is an extended common support assumption, however, not covered by the standard assumptions of the potential outcomes approach. Newcomb's problem is a more esoteric scenario in which the common support be made to hold, but policy exchange or policy choice can be made to fail independently.
+
+Suppose an agent with observations $O$ implements a policy $\Phi$ from a set of $\epsilon$-deterministic policies $\Phi_\epsilon= \{\phi:O\to\Delta I|\phi(o,i)\in\{\epsilon,1-\epsilon\}\}$. Suppose there is additionally a variable $\overline{\Phi}$ in the agent's history such that $\Phi=\overline{\Phi}$. Thus, if we take $A=\{O,\overline{\Phi}\}$, we clearly don't have free policy choice: $P(A=(o,\phi)|\Phi=\phi)\neq P(A=(o,\phi)|\Phi=\phi')$ for $\phi'\neq \phi$.
+
+There is also a predictor that observes $A$ and outputs prediction $q=\mathrm{argmax}_{q'}\overline{\Phi}(O,q')$. Note that by assumption, we have $P(Q=I)=1-\epsilon$. The outcome $V$ pays out deterministically at the following values for different choices of $Q$ and $I$:
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c|c}
+            & Q=1 & Q=2  \\
+            \hline
+        I=1 & 1e6  & 0 \\
+        I=2 & 1.1e6& 1e5
+    \end{tabular}
+    \caption{Newcomb's problem payoff $V$}
+    \label{tab:newcombs_problem}
+\end{table}
+
+The agent's cost is $C=-\mathbb{E}[V]$
+
+We have policy exchangeability, as $P(V|I,Q)=P(V|I,A)=P(V|I,A,\Phi)$. Furthermore, for every $\phi\in\Phi_\epsilon$ we have $\phi(a,i)\geq \epsilon$ for all $a\in A$, $i\in\{1,2\}$, so we have common support. This demonstrates the possibility of \ref{def:policy_exchange}$\wedge$\ref{def:common_support}$\wedge\neg$\ref{def:free_policy}.
+
+Also consider the policies $\phi_1:\phi_1(o,1)=1-\epsilon$ and $\phi_2:\phi(o,2)=1-\epsilon$ for all $o\in O$. We then have
+\begin{align}
+    \mathbb{E}[V|\Phi=\phi_1] &= 1\mathrm{e}6 (1-\epsilon) + 1.1\mathrm{e}6 (\epsilon) \\
+                              &= 1\mathrm{e}6 + \epsilon \mathrm{e} 5 \\
+    \mathbb{E}[V|\Phi=\phi_2] &= (1-\epsilon)\mathrm{e}5
+\end{align}
+
+It is not hard to show that any $\phi$ with nonconstant dependency on $o$ is also worse than $\phi_1$, and that $\phi_1$ is therefore optimal.
+
+Of note:
+\begin{itemize}
+    \item It is sometimes possible to find an optimal policy even if free policy choice is violated
+    \item Standard causal theories don't explicitly assume free policy choice, so they're unable to relax it in this example and as a result suggest that $\phi_2$ is optimal
+\end{itemize}
+
+
+% Consider an agent with a set of variables $H$ comprising its history and a set of actions $I$ available. The agent has an observation function $\theta$ such that $A=\theta(H)$ and implements some policy $\psi:H \to \Delta I$ (not necessarily cost minimising). Denote the agent's policy choice by $\Psi$. 
+% Suppose the agent wishes to minimise a cost defined over action $I$ and a set of future variables $V$, $C:\Delta(I\times V)\to \mathbb{R}$. Furthermore, suppose it does so using the following strategy (which may or may not be sound): observe $I$, $A$ and $V$ and for each $a\in A$ and $i\in I$ estimate $P(V|I=i,A=a,\Psi=\psi)$ and $P(A|\Psi=\psi)$. Then implement the policy given by the Markov kernel $\tilde{\phi}:A\times I \to [0,1]$ such that
+% \begin{align*}
+%     \tilde{\phi} = \text{argmin}_{\phi} C\left(\sum_{a\in A}P(V=v|I=i,A=a,\Psi=\psi)\phi(a,i) P_\psi(A=a|\Psi=\psi)\right)
+% \end{align*}
+
+% The question arises: when will this strategy successfully select a policy that is optimal in the sense that given observations $A$ there is no Markov kernel $\phi\in [0,1]^{A\times I}$ such that 
+% \begin{align*}
+%     &C\left(\sum_{a\in A}P(V=v|I=i,A=a,\Psi=\phi)\phi(a,i) P_\psi(A=a|\Psi=\phi)\right) < \\
+%     &C\left(\sum_{a\in A}P(V=v|I=i,A=a,\Psi=\tilde{\phi})\tilde{\phi}(a,i) P_\psi(A=a|\Psi=\tilde{\phi})\right)
+% \end{align*}
+% ?
+
+% For a simple example of where this approach won't work, suppose there is some unobserved $H_1\in H$ such that $H_1\sim\mathrm{Bernoulli}(0.5)$ and $V=H_1$, $C(P(I,V))=\mathbb{E}(I-2V)$ and $\psi(h,i)=\delta_{h_1 i}$. This is a classic case of ``correlation is not causation''; we have $V\not\CI_{P_\psi} I$ but $V\CI_{P_\psi} I | H_1$. The cost approach above will recommend the policy $\phi_1$ where $\phi_1(\cdot,i)=\delta_{i1}$. The actual costs are:
+% \begin{align}
+%     C\left(P_\psi(V=v|I=i)\delta_{i1}\right)&=-1\text{ but}\\
+%     C\left(P_{\phi_1}(V=v|I=i)\delta_{i1}\right) &=-0.5 \\
+%     C\left(P_{\phi_0}(V=v|I=i)\delta_{i1}\right) &=-1
+% \end{align}
+
+% \subsubsection{Assumptions for policy-based causal inference}
+
+% % \begin{definition}[Causal Model]
+% % Given a set of variables $\mathbf{X} = \{V,H,I\}$ and a set of Markov kernels $\Psi:\{H\to\Delta I\}$, a causal model is a map $P_{(\cdot)}: \Psi \to \Delta X$. We will write $P(\cdot|\Psi=\psi)=P_\psi(\cdot)\in \Delta X$.
+% % \end{definition}
+
+% % \begin{remark}
+% % I'm not sure it's necessary to postulate a model of this type, but it substantially simplifies things.
+% % \end{remark}
+
+% \begin{definition}[Causal identification problem]\label{def:causal_ident_prob}
+% A causal identification problem is a problem of  the form: Given sets of generating random variables $V,H,I$ and policy $\Psi$ where $P(I=i|H=h)=\Psi(h,i)$, sets of observed variables $V,A,I$ where $\theta(H)=A$ for some observation function $\theta$, and fixing $\Psi=\psi$, find $P(A,I,V|\Psi=\phi)$ for each $\phi\in [0,1]^{A\times I}$.
+% \end{definition}
+
+% The following four assumptions are sufficient for a causal identification problem to be solvable:
+% \begin{definition}[Policy exchangeability]\label{def:policy_exchange}
+% For all $\phi \in [0,1]^{A\times I}$ where $\phi(a,i)>0$,
+% \[P(V|A=a,I=i,\Psi=\psi)=P(V|A=a,I=i,\Psi=\phi)\] 
+% \end{definition}
+
+% \begin{definition}[Free policy choice]\label{def:free_policy}
+% For all $\phi\in [0,1]^{A\times I}$, $P(A|\phi)=P(A|\psi)$
+% \end{definition}
+
+% \begin{definition}[Common support]\label{def:common_support}
+% For all $a\in A$ and $i\in I$ there exists $h\in O^{-1}(a)$ such that $\psi(a,i)>0$
+% \end{definition}
+
+% \begin{theorem}[Policy-based identifiability]
+% Given a causal identification problem, if Assumptions \ref{def:policy_exchange}, \ref{def:free_policy} and \ref{def:common_support} hold, then $P(V=v|A=a,I=i,\Phi=\phi)=P(V=v|A=a,I=i,\Phi=\phi_{\mathrm{obs}})$ for all $(a,i):\phi(a,i)>0$ for all $\phi\in\Phi$. Such a problem is called \emph{identifiable}. 
+% \end{theorem}
+
+% \begin{proof}
+% It is always possible to write
+% \begin{align}
+%     P(V=v,I=i|\Psi=\phi) &= \sum_{a\in A} \phi(a,i) P(V=v|I=i,A=a,\Psi=\phi) P(A=a|\Psi=\phi)
+% \end{align}
+
+% For any $\phi\in[0,1]^{A\times I}$,
+% \begin{align}
+%     P(V=v,I=i|\Psi=\phi)&=\sum_{a} P(V=v|A=a,I=i,\Psi=\phi)\phi(a,i)P(A=a|\Psi=\phi) \\
+%             &= \sum_{a} P(V=v|A=a,I=i,\Psi=\psi)\phi(a,i)P(A=a|\Psi=\phi) \qquad \text{Assumptions \ref{def:policy_exchange} \& \ref{def:common_support}}\\
+%             &= \sum_{a} P(V=v|A=a,I=i,\Psi=\psi)\phi(a,i)P(A=a|\Psi=\psi) \qquad \text{Assumption \ref{def:free_policy}}
+% \end{align}
+
+% \end{proof}
+
+% \begin{remark}
+% Assumptions \ref{def:policy_exchange} and \ref{def:free_policy} address counterfactual quantities, as $\Psi=\psi$ in all cases. There is a relationship between them, as a failure of exchangeability may be rectified by identifying additonal variables to include in $A$. However, if we make $A$ extremely large - for example, if we just let $A=H$, then we may find some dependence between $A$ and $\Psi$. I don't know if there's a neater way to capture this than what's been put down here.
+% \end{remark}
+
+% \begin{remark}
+% The policy exchangeability assumption is similar to the potential outcomes assumption of ignorability, with two differences:
+% \begin{itemize}
+%     \item the set $A$ must be calculated from the history of the agent at the time that it computes $I$, which excludes the possibility that $A$ is an effect of $I$
+%     \item the ignorability condition asserts exchangeability for a restricted set of policies: the observational policy $\psi$, and constant policies $\phi_j:(a,i)\mapsto \delta_{ij}$
+% \end{itemize}
+% \end{remark}
+
+% \begin{remark}
+% I am definitely not claiming these assumptions are necessary, only that they are sufficient.
+% \end{remark}
+
+
+% In an idealised randomised trial, we identify a domain $A$ and choose a policy $\psi:A\to \Delta I$. We assume that $A$ is not dependent on the particular choice of $\psi$ (but see below). We can argue that for exchangeability starting from a slightly weaker assumption:
+
+% \begin{definition}[Weak exchangeability]
+% For all $\phi\in [0,1]^{A\times I}$, $P(V|H=h,I=i,\Psi=\psi)=P(V|H=h,I=i,\Psi=\phi)$
+% \end{definition}
+
+% Note that given the domain of $\psi$ and any $\phi\in [0,1]^{A\times I}$ is $A$, we have 
+% \begin{align}
+%     \psi(h,i)&=\psi(h',i)\qquad \forall i\in I, h,h' \in H \\
+%     P(I|H=h,\Psi=\psi) & = P(I|H=h',\Psi=\psi) \\
+%     \implies P(H=h|I=i
+% \end{align}
+
+% % That is, $$
+
+% % Then we have
+% \begin{align}
+%     P(V|A=a,I=i,\Psi=\psi)&=\sum_{h\in O^{-1}(a)} P(V|H=h,I=i,\Psi=\psi) P(H=h|I=i,\Psi=\psi) \\
+%                           &=\sum_{h\in O^{-1}(a)} P(V|H=h,I=i,\Psi=\phi) P(H=h|I=i,\Psi=\psi) \qquad \text{Weak exchangeability}\\
+%                           &=\sum_{h\in O^{-1}(a)} P(V|H=h,I=i,\Psi=\phi) P(H=h|I=i,\Psi=\phi) \qquad \text{Conditional independence of $H$ and $I$}\\
+%                           &= P(V|A=a,I=i,\Psi=\phi)
+% \end{align}
+
+% \subsubsection{Assumptions \ref{def:policy_exchange}, \ref{def:free_policy} and \ref{def:common_support} are independent}
+
+% \textbf{Assumptions \ref{def:policy_exchange} + \ref{def:common_support} $\not\implies$ \ref{def:free_policy}}
+
+% This example is based on Newcomb's problem, a classic decision theoretic paradox.
+
+% Suppose an agent with observations $O$ implements a policy $\Phi$ from a set of $\epsilon$-deterministic policies $\Phi_\epsilon= \{\phi:O\to\Delta I|\phi(o,i)\in\{\epsilon,1-\epsilon\}\}$. Suppose there is additionally a variable $\overline{\Phi}$ in the agent's history such that $\Phi=\overline{\Phi}$. Thus, if we take $A=\{O,\overline{\Phi}\}$, we clearly don't have free policy choice: $P(A=(o,\phi)|\Phi=\phi)\neq P(A=(o,\phi)|\Phi=\phi')$ for $\phi'\neq \phi$.
+
+% There is also a predictor that observes $A$ and outputs prediction $q=\mathrm{argmax}_{q'}\overline{\Phi}(O,q')$. Note that by assumption, we have $P(Q=I)=1-\epsilon$. The outcome $V$ pays out deterministically at the following values for different choices of $Q$ and $I$:
+% \begin{table}[h]
+%     \centering
+%     \begin{tabular}{c|c|c}
+%             & Q=1 & Q=2  \\
+%             \hline
+%         I=1 & 1e6  & 0 \\
+%         I=2 & 1.1e6& 1e5
+%     \end{tabular}
+%     \caption{Newcomb's problem payoff $V$}
+%     \label{tab:newcombs_problem}
+% \end{table}
+
+% The agent's cost is $C=-\mathbb{E}[V]$
+
+% We have policy exchangeability, as $P(V|I,Q)=P(V|I,A)=P(V|I,A,\Phi)$. Furthermore, for every $\phi\in\Phi_\epsilon$ we have $\phi(a,i)\geq \epsilon$ for all $a\in A$, $i\in\{1,2\}$, so we have common support. This demonstrates the possibility of \ref{def:policy_exchange}$\wedge$\ref{def:common_support}$\wedge\neg$\ref{def:free_policy}.
+
+% Also consider the policies $\phi_1:\phi_1(o,1)=1-\epsilon$ and $\phi_2:\phi(o,2)=1-\epsilon$ for all $o\in O$. We then have
+% \begin{align}
+%     \mathbb{E}[V|\Phi=\phi_1] &= 1\mathrm{e}6 (1-\epsilon) + 1.1\mathrm{e}6 (\epsilon) \\
+%                               &= 1\mathrm{e}6 + \epsilon \mathrm{e} 5 \\
+%     \mathbb{E}[V|\Phi=\phi_2] &= (1-\epsilon)\mathrm{e}5
+% \end{align}
+
+% It is not hard to show that any $\phi$ with nonconstant dependency on $o$ is also worse than $\phi_1$, and that $\phi_1$ is therefore optimal.
+
+% Of note:
+% \begin{itemize}
+%     \item It is sometimes possible to find an optimal policy even if free policy choice is violated
+%     \item Standard causal theories don't explicitly assume free policy choice, so they're unable to relax it in this example and as a result suggest that $\phi_2$ is optimal
+% \end{itemize}
+
+% \textbf{Assumptions \ref{def:free_policy} + \ref{def:common_support} $\not\implies$ \ref{def:policy_exchange}}
+
+% Suppose $A=(A_1,A_2)\in \{(0,0),(1,0)\}$, $I\in\{0,1\}$ and $\Phi$ is in the set of $\epsilon$-deterministic policies $\{A\to \Delta I\}$.  Furthermore, suppose $P(V|I=i,A=(a,0))=\delta(i-a)$ for some $a'\in \{0,1\}$. If we consider only the variable $A_2$, we have $P(A_2=0|\Phi=\phi)=P(A_2=0|\Phi=\phi')=1$ for all $\phi'\in\Phi$ and by the $\epsilon$-determinism assumption we have common support. However, given $\phi_=:\phi_=((a,0),i)=(1-\epsilon)\delta(i-a)+\epsilon(1-\delta(i-a))$ and $\phi_{\neq}:\phi_{\neq}((a,0),i)=(1-\epsilon)(1-\delta(i-a))+\epsilon\delta(i-a)$. Then
+% \begin{align}
+%     P(V|I=i,A_2=0,\Phi=\phi_=) &= 1-\epsilon \\
+%     P(V|I=i,A_2=0,\Phi=\phi_{\neq}) &= \epsilon \\
+%     &\neq P(V|I=i,A_2=0,\Phi=\phi_=)
+% \end{align}
+
+% \textbf{Assumptions \ref{def:policy_exchange} + \ref{def:free_policy} $\not\implies$ \ref{def:common_support}}
+
+% This is trivially shown by taking any case where Assumptions \ref{def:policy_exchange} + \ref{def:free_policy} hold and restricting $\Phi$ to deterministic functions.

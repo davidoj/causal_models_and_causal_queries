@@ -30,8 +30,12 @@
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corrolary}[theorem]{Corollary}
 
 \setcounter{secnumdepth}{6}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 
 \newcommand{\NC}[2]{\ensuremath{{#1}\not\to{#2}}}
 \newcommand{\CI}{\mathrel{\text{\scalebox{1.07}{$\perp\mkern-10mu\perp$}}}}
@@ -43,11 +47,17 @@
 \tableofcontents
 \newpage
 
-% \include{causal_model_definitions}
+%  \include{causal_model_definitions}
 
-\include{causal_queries}
+% \include{causal_queries}
 
-% \include{key_questions}
+%  \include{key_questions}
+
+% \include{causal_queries_old}
+
+\include{replacing_interventions_with_kernels}
+
+% \include{causal_hierarchy}
 
 \bibliographystyle{plain}
 \bibliography{references.bib}
