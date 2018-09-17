@@ -245,3 +245,29 @@ Both the faithfulness assumption and additive noise model causal discovery ident
 \begin{question}
     How to get from Markov kernel composition to random variables to Bayesian networks and back.
 \end{question}
+
+\begin{question}
+    Relationship between approximate assumptions (exchangeability, stability) and cost minimisability
+\end{question}
+
+\begin{question}
+    What form do arguments take for approximate assumptions to hold?
+\end{question}
+
+\begin{question}
+    What do you get if $P(v|i,a,q)=P(v|i,a)$ for one $q\in Q$? (not much? e.g. ``it only works in experiments, but all non-experiments are confounded''
+\end{question}
+
+\begin{question}
+    If $P(i|a,q)$ has high entropy, does that give any more reason to believe policy exchangeability than if it has low entropy? Consider: high mutual information between $q$ and $v|i,a$, between $v$ and $i$, between $q$ and $i|a$.
+\end{question}
+
+\begin{question}
+    What is the relationship between strong policy exchangeability $P(v|i,a,q)=P(v|i,a,q')$, even where $\phi(a,q;i)=0$ and structural independence  - $V\CI Q| A,I$ for all $P_H$, $\phi$, $\mu$, $\pi$ and $\theta$?
+\end{question}
+
+\begin{question}
+    A regular Bayesian net represents independence in a probability distribution. A causal Bayesian net represents an extended notion of independence (e.g. structural independence). 
+    
+    Proposition: ``extended independence'' must matter because it ultimately cashes out in regular independence. Is this true? Which regular independences do we get from extended independence?
+\end{question}
