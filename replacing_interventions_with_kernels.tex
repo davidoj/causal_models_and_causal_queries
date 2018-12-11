@@ -303,7 +303,7 @@ Some notes on this setup:
     \item Any fixed value of $Q$ corresponds to a particular Markov kernel $\phi(\cdot,q,\cdot):A\to \Delta (\mathcal{I})$
 \end{itemize}
 
-\subsection{Example: useless medicine}
+\subsection{Example: useless medicine}\label{sec:useless_medicine}
 
 To motivate subsequent discussions, consider a poorly conducted experiment featuring a useless medicine. 
 
@@ -431,14 +431,14 @@ It has common support if it has $q$-common support for all $q\in Q$.
 
 
 
-\begin{definition}[Policy exchangeability]
+\begin{definition}[Policy exchangeability]\label{def:policy_exchangeability}
 A causal model $\langle P_H, \mu,\pi,\phi,\theta\rangle$ is policy exchangeable if for all $q,q'\in Q$
 \begin{align}
     P(v|i,a,q) = P(v|i,a,q')
 \end{align}
 \end{definition}
 
-\begin{definition}[Covariate stability]
+\begin{definition}[Covariate stability]\label{def:covariate_stability}
 A causal model $\langle P_H, \mu,\pi,\phi,\theta\rangle$ is covariate stable if for all $q,q'\in Q$
 \begin{align}
   P(a|q) = P(a|q')
@@ -464,9 +464,12 @@ Furthermore, it is trivially true that
     P_q(v|i,a,q) = P(v|i,a,q)
 \end{align}
 
-Given policy exchangeability, we therefore have
+Given policy exchangeability, we therefore have for all $q,q'\in Q$
 \begin{align}
-    P_q(v|i,a,q) = P(v|i,a,q)
+    P_{q'}(v|i,a,q) &= P(v|i,a,q)\\
+    P_{q'}(v|i,a,q) &= P(v|i,a,q)\\
+    \sum_{q\in Q} P_{q'}(v|i,a,q) P(q|i,a) &= \sum_{q\in Q} P(v|i,a,q) \\
+    P_q(v|i,a) = P(v|i,a)
 \end{align}
 
 It is straightforward to show that $P_q(a) = P(a)$:
@@ -680,9 +683,9 @@ Then, keeping all other values as before, we have
 
 In this case, we lose weak exchangeability provided $C=1$ has nonzero probability - $P(i,v|q=1,c=1)\neq P(i,v|q=0,c=1)$.
 
-The counterfactual $P_q$ could be thought of as abbreviated notation for this learning/implementation split. Note that above we assumed that every kernel and the base $P_H(h)$ were unchanged in the implementation phase; this closely corresponds to the operation of replacing $\pi$ with $\pi_q$ to obtain $P_q$. 
+The counterfactual $P_q$ could be thought of as abbreviated notation for this learning/implementation split. Note that above we assumed that every kernel and the base $P_H(h)$ were unchanged in the implementation phase, while $\pi$ is held to behave differently in each case. There is a clear analogy here between conditioning on $c=1$ and replacing $\pi$ with $\pi_q$ to obtain $P_q$. 
 
-Unfortunately, it doesn't all work out neatly. In particular, if strong exchangeability holds but covariate stability does not, counterfactual and conditional approaches will recommend different actions. Such situations are easy to specify formally, but because they require a correlation between the covariates $A$ and the chosen policy $Q$, intuitive examples are somewhat exotic in order to have some chance of satisfying our idea of ``choosing'' something. 
+Unfortunately, it isn't always possible to redefine the problem in order to deal with disagreements. In particular, if strong exchangeability holds but covariate stability does not, counterfactual and conditional approaches will recommend different actions. Such situations are easy to specify formally, but because they require a correlation between the covariates $A$ and the chosen policy $Q$, intuitive examples may be somewhat exotic in order to have some chance of satisfying our idea of ``choosing'' something. 
 
 \textbf{Twin prisoner's dilemma}
 

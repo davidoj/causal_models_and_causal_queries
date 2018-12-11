@@ -17,6 +17,9 @@
 \usepackage{amssymb}
 \usepackage{dsfont}
 \usepackage{hyperref}
+\usepackage{ stmaryrd }
+\usepackage{csquotes}
+\usepackage{wasysym}
 
 \theoremstyle{definition}
 \newtheorem{question}{Question}[section]
@@ -39,6 +42,7 @@
 
 \newcommand{\NC}[2]{\ensuremath{{#1}\not\to{#2}}}
 \newcommand{\CI}{\mathrel{\text{\scalebox{1.07}{$\perp\mkern-10mu\perp$}}}}
+\newcommand{\GS}[1]{\ensuremath{\underline{\mathscr{#1}}}}
 
 \begin{document}
 
@@ -47,19 +51,19 @@
 \tableofcontents
 \newpage
 
-%  \include{causal_model_definitions}
+% \include{causal_model_definitions}
 
-% \include{causal_queries}
-
+%\include{causal_queries_3}
+\include{modularity}
 %  \include{key_questions}
 
 % \include{causal_queries_old}
 
-%\include{replacing_interventions_with_kernels}
+% \include{replacing_interventions_with_kernels}
 
-\include{evaluating_models}
+% \include{evaluating_models}
 
-% \include{examples}
+%\include{examples}
 
 \bibliographystyle{plain}
 \bibliography{references.bib}

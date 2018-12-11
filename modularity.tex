@@ -1,0 +1,30 @@
+\subsection{Modularity}
+
+It is possible to formulate the $N$-armed bandit problem as a causal inference problem (see \ref{sssec:n_armed_bandit}). The causal perspective forces the  explicit assumption that $P(X|do(I))=P(X|I)$. It might be valuable in some practical bandit-like situations to consider whether $P(X|I)P(I|Q)$ is the policy-outcome map, but at least in an idealised bandit problem this is a safe assumption. 
+
+Consider the apparently similar case of a randomised controlled drug trial (see \ref{ssssec:randomised_expt}). Formally, this problem is very similar to the bandit problem. Unlike the bandit problem, drug trials have a number of end users. There might be administrators who might recommend for or against prescribing the drug ($Q_{adm}$), doctors who might decide whether or not to prescribe the drug ($Q_{doc})$) and patients who decide whether or not to take the drug ($Q_{pat}$). The policy set of each user is different, and so the question of what the appropriate policy outcome map is more interesting here. Suppose the drug trial gives us $P_{\text{trial}}(X|I)$ (in practice, drug trials tend to yield coarser information than the full distribution such as the average treatment effect).
+
+Letting $Q_\_$ stand in for the policy choices of the different users, if the following identities hold for all $q,q'\in Q_\_$:
+
+\begin{align}
+    C[P(X|Q_\_=q)] - C[P(X|Q_\_ = q')] = \sum_I \left(C[P_{\text{trial}}(X|I)P(I|Q_\_=q)] - C[P_{\text{trial}}(X|I)P(I|Q_\_=q')]\right)
+\end{align}
+
+Then we have
+
+\begin{align}
+    \argmax_q C[P(X|Q_\_=q)] = \argmax_q C[P_{\text{trial}}(X|I)P(I|Q_\_=q)]
+\end{align}
+
+Supposing the users have to $P(I|Q_\_)$ for their set of policy choices, the right hand side can be calcluated without samples from $P(X,Q_\_)$. Here $P_{\text{trial}}(X|I)$ is functioning as a ``reusable module'' that facilitates calculation of $P(X|Q_\_)$.
+
+A causal argument can be given for this reusability. First, because of the trial design, $P_{\text{trial}}(X|I)=P(X|do(I))$. Next, we assume $\text{De}(Q_\_) = \{I\}$, so 
+
+\begin{align}
+    P(X|do(Q_\_))&=\sum_{\text{Pa}(X)} P(X|\text{Pa}(X)) P(\text{Pa}(X)|do(Q_\_)) \\
+                 &=\sum_I  P(I|do(Q_\_))\sum_{\text{Pa}(X)\setminus\{I\}} P(X|\text{Pa}(X))P(\text{Pa}(X)\setminus\{I\}|I) \\
+                 &=\sum_I  P(I|do(Q_\_))\sum_{\text{Pa}(X)\setminus\{I\}} P(X|\text{Pa}(X))P(\text{Pa}(X)\setminus\{I\}|I, do(Q_\_)) \\
+                 &=\sum_I P(I|do(Q_\_) P(X|I)
+\end{align}
+
+Finally, we assume $P(X|do(Q_\_))=P(X|Q_\_)$.   

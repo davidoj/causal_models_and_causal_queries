@@ -1,0 +1,365 @@
+% % Even the potential outcomes guys want to talk about ancestors \cite{hernan_causal_2018}: 
+% % \begin{itemize}
+% %     \item Time-ordering: ``The counterfactual outcome $Y^a$, like one’s genetic make-up, can be thought of as a fixed characteristic of a person existing before the treatment $Y$ was randomly assigned.''
+% %     \item Conditional is not a synonym for depend: ``we use several randomization probabilities that depend (are conditional) on the values of the variable $L$''
+% % \end{itemize}
+
+% % \begin{definition}[Orphan]
+% % Given a Markov kernel $\pi:\{1\}\to \Delta(\mathcal{V})$ where $\{1\}$ is a generic one-element set, the variables $\mathcal{V}$ are \emph{orphans}.
+% % \end{definition}
+
+% \section{The origin and purpose of causal graphs}
+
+% % A causal inference problem in the Pearlean framework has two objectives. Given a set of variables $\mathcal{V}$, we aim to find the joint probability distribution $P(\mathcal{V})$ and a causal structure $\mathscr{G}$ which is a directed acyclic graph over $\mathcal{V}$. While the problem of learning the joint probability distribution is well-understood, it's less clear how the true causal graph is justified. Pearl argues that causal knowledge arises, ultimately, from manipulation (pp 253)\cite{pearl_causality:_2009}:
+% % \begin{displayquote}
+% %     Aside from passive observations, a child possesses two valuable sources of causal information that are not available to the ordinary statistician: manipulative experimentation and linguistic advice. Manipulation subjugates the putative causal event to the sole influence of a known mechanism [...] The whimsical nature of free manipulation replaces the statistical notion of randomized experimentation.
+% %     [...]
+% %     The second valuable source of causal knowledge is linguistic advice [...] which encodes the manipulative experience of past generations.
+% % \end{displayquote}
+
+% % It isn't clear that this definition succeeds. We cannot define causal models axiomatically in terms of the whimsical manipulations of children (and indeed the randomised experiment was devised to address the fact that such manipulations may \emph{not} be whimsical enough to reveal causal effects). Instead, we must instead justify why we can often treat manipulations as orphaned variables in a causal structure. This justification itself requires reference to structural concepts such as ancestors and children, which makes this na\"ive attempt to justify causal structures circular.
+
+% Causal graphs contain information additional to a joint probability distribution over a set of variables $\mathcal{V}$. Every fully connected causal graph is compatible with any given probability distribution. Furthermore, we cannot in general assume all causally relevant variables have been observed, which adds yet more possible causal graphs for a given distribution. 
+
+% Where do causal graphs come from?
+% \begin{itemize}
+%     \item Could define actions to be root nodes in a causal graph and additional structure follows from there; however, RCTs were invented because taking actions was deemed insufficient to yield causal information in some cases
+%     \item Could argue that actions are typically appropriate to treat as root nodes, but this argument hinges on independence of ancestors of action and outcome. Notion of ``ancestors'' requires structure, so definition is circular 
+%     \item Could define \emph{idealised RCTs} to be root nodes in causal graph and structure follows from there
+% \end{itemize}
+
+% Furthermore, we can ask what the purpose of a causal graphs is:
+
+% \begin{itemize}
+%     \item Given a set of actions $\mathcal{I}$, we can posit an action conditional distribution $P(\mathcal{X}|\mathcal{I})$ even if we don't have samples from it
+%     \item We can make assumptions about how a distribution factorises, which we can encode as a Bayesian network
+% \end{itemize}
+
+% While both of these possibilities may leverage our \emph{intuitions} about causality, ordinary probability theory is sufficient to conduct both activities without the additional formalism of causal graphs and do-interventions. This raises the possibility that causal graphs and do-interventions are simply an elegant notation for a common type of problem.
+
+% Note that an idealised RCT is a Markov kernel $\{1\}\to \Delta(\mathcal{I})$ for action set $\mathcal{I}$. 
+
+% I will argue here that
+
+% \begin{itemize}
+%     \item Causal graphs and do-interventions are distinct from action-conditional probability distributions, but in most pratical cases they are degenerate
+%     \item Causal structures arise from defining one or more canonical nondeterministic kernels
+%     \item The assumption of ``parentlessness'' facilitates decision making 
+%     \item ``Parentlessness'' can be justified on the basis of non-structural assumptions
+%     \item Nonetheless, it not necessarily the case that any two variables have a canonical causal relationship relative to some set of kernels $\mathscr{K}$
+% \end{itemize}
+
+% \subsection{Causal structure from a Markov kernel}
+
+% Assume that a causal structure exists. That is, for each variable $V_i\in \mathcal{V}$ there is a single Markov kernel $\kappa_i:\text{Pa}_i\to\Delta(V_i)$ generating the distribution of $V_i$ for some parent set $\text{Pa}_i\subset\mathcal{V}$. Each kernel defines a set of structural relations $E_i=\{W_i\to V_i|W_i\in \text{Pa}_i\}$. Assume that this structure is acyclic. Specifying the joint probability distribution $P(\mathcal{V})$ along with the structure $\{E_i|i\in\{1,..,|\mathcal{V}|\}$ is equivalent to specifying the full set of kernels $\{\kappa_i|i\in \{1,..,|\mathcal{V}|\}$ \cite{pearl_causality:_2009}.
+
+% Given just the distribution $P(\mathcal{V})$, a wide variety of structures are possible. Any fully-connected acyclic structure is compatible with any distribuiton $P$, and for any DAG $\mathscr{G}$ over $\mathcal{V}$ there is a fully-connected graph $\overline{\mathscr{G}}$ which maps to the same set of do-interventions \cite{peters_structural_2013}.
+
+% Suppose that, by divine inspiration, we know the signature of a particular kernel $\kappa_i:\text{Pa}_i\to\Delta(V_i)$. This trivially gives us the structure $\text{Pa}_i\to V_i$. In addition, $P(\mathcal{V})$ may be informative as to additional causal structure with no further assumptions. In particular, any variable $V_j$ such that $V_j\not\CI V_i | \text{Pa}_i$ must be a descendant of $V_i$ by the local Markov property. Note that the converse isn't necessarily true; if $V_j \CI V_i |\text{Pa}_i$, $V_j$ may nonetheless be a descendant of $V_i$.
+
+% This condition is informative provided we have $\{W|W\not\CI V_i | \text{Pa}_i\}\neq \emptyset$. Notably, this requires that $\mathbb{I}(V_i,\text{Pa}_i)<1$, as if this is a deterministic relationship then every variable will be independent of $V_i$ conditional on $\text{Pa}_i$. 
+
+% The above remains true even if only a marginal $P(\mathcal{X})$ where $\mathcal{X}\subset\mathcal{V}$ is observed.
+
+% $V_i$ is a special variable in the sense that, by positing $\kappa_i$, we claim to know the full set of parents of $V_i$. This is what enables us to infer that some variables are descendents of $V_i$. If we have both $V_j$ and $V_k$ as descendents of $V_i$, we cannot infer $V_j\to V_k$ or vise-versa, as we know only that $V_i\in \text{Pa}_j\cap \text{Pa}_k$. In fact, Theorem \ref{th:no_canon_order} shows that given $V_i$ and $\mathcal{D}_i\subset \text{De}_i$, any fully connected graph with $V_i\to \mathcal{D}_i$ is compatible with any probability distribution $P(\text{Pa}_i,V_i,\mathcal{D}_i)$.
+
+% \begin{theorem}[No canonical ordering of children]\label{th:no_canon_order}
+
+% \end{theorem}
+
+% Note that an idealised randomised control trial with a set of interventions $\mathcal{I}$ is a Markov kernel $\{1\}\to\mathcal{I}$. Thus for any outcome $\mathcal{X}$ for which $\mathcal{X}\not\CI \mathcal{I}|\emptyset$, we have the causal structure $\mathcal{I}\to\mathcal{X}$. That is, given knowledge of the kernel generating the intervention choices, we can deduce that the outcomes $\mathcal{X}$ are effects of the interventions $\mathcal{I}$ without making this assumption to begin with. Thus we are not required to invoke, for example, the time ordering of events, nor to posit that we have \emph{a priori} knowledge of the relationship between $\mathcal{I}$ and $\mathcal{X}$.
+
+
+% \subsection{Optimal policies and the do-operation}
+
+% Consider an agent with a set of actions $\mathcal{I}$ and outcomes of interest $\mathcal{X}$. It seeks to minimise a cost $C:\Delta(\mathcal{I}\times\mathcal{X})\to \mathbb{R}$. In general, it may take different actions as a result of observations $\mathcal{O}$. That is, the agent can implement one out of a set of maps $\mathcal{O}\to \mathcal{I}$. Parametrise the particular choice of map by $Q$ and we have the agent implementing a Markov kernel $\kappa_{\mathcal{I}}:\mathcal{O}\times Q\to\Delta(\mathcal{I})$.
+
+% Suppose the set $\{\kappa_{\mathcal{I}}(\cdot|\cdot,q)|q\in\text{Range}(Q)\}$ is convex. That is, for any $q_1,q_2\in\text{Range}(Q)$, $\alpha,\beta\in[0,1]$ there exists $q^{\alpha\beta}_{12}\in\text{Range}(Q)$ such that $\alpha \kappa_{\mathcal{I}}(\cdot|\cdot,q_1) + \beta \kappa_{\mathcal{I}}(\cdot|\cdot,q_2) = \kappa_{\mathcal{I}}(\cdot|\cdot,q^{\alpha\beta}_{12})$. That is, any mixture of policies can have their behaviour matched by a particular policy.
+
+% The agent chooses a policy $q^*\in \text{Range}(Q)$ such that
+
+% \begin{align}
+%     q^*\in \argmin_q[C(f(i,x|q))] \label{eq:generic_optimal_policy}
+% \end{align}
+
+% For some $f$ where $f(\cdot,\cdot|q)\in \Delta(\mathcal{I}\times\mathcal{X})$ for every $q\in\text{Range}(Q)$.
+
+% A central concern in the task of causal inference is the possibility that, given observations of $Y$ and $X$ where $X\to Y$, $P(Y|X=x)\neq P(Y|\text{Action has been taken to achieve }X=x)$. The causes of $X$ differ in each case, and if $Y$ also depends on these causes they could cause its distribution to differ. 
+
+% This concern is particularly vexing in this setting. If we hold the causes of $Q$ constant - that is, if we consider a particular realisation of Ex. \ref{eq:generic_optimal_policy} - we find $P(q\not\in \argmin_q[C(f(i,x|q))])=0$. Thus, without further elaboration, $P(i,x|q)$ is not well defined for any $q\not\in \argmin_q[C(f(i,x|q))]$. This issue is connected to the need identified in the potential outcomes literature of evaluating the outcomes of counterfactual actions.
+
+% There isn't a generic means to choose a function $f$ such that the chosen policy $q$ is always the best one. Intuitively, however the function $f$ is chosen, we can always posit an environment that arbitrarily discriminates against agents choosing $f$ in that manner.
+
+% \begin{theorem}\label{th:no_optimal_model}
+%     Placeholder
+% \end{theorem}
+
+% Two schemes have been proposed to deal with this issue, known as ``causal decision theory'' and ``evidential decision theory''\cite{weirich_causal_2016}, \cite{jeffrey_logic_1981}.
+
+% Causal decision theory proposes that $f(i,x|q)=P(i,x|do(q))$, where $do(q)$ is the standard $do$ operation on the causal graph implied by $\{\kappa_Q,\kappa_X,\kappa_O,\kappa_I\}$.
+
+% Evidential decision theory proposes that there is a context variable $T$ and some relevant context $k\subset \text{Range}(T)$ such that $f$ should be chosen as $f(i,x|q)=P(i,x|q,T=k)$.
+
+% Suppose $T\in \mathbb{N}$ and the relevant context is $k=\{0,1\}$ where $T=0$ indicates the ``observation context'' and $T=1$ indicates the ``implementation context'', being the context in which the agent implements it's guess of the optimal policy. In the latter context, the policy is chosen according to some realisation of Eq. \ref{eq:generic_optimal_policy}. In the observation context, the mechanism determining $Q$ is unknown. Note that this discussion implies that $Q\in\text{De}(T)$.
+
+% Samples from $P(i,x,o|T=0)$ are obtained, and the agent computes
+
+% \begin{align}
+%     f(i,x|q) = \sum_{o\in\mathcal{O}} P(x|o,i,T=0) \kappa_{\mathcal{I}}(i|o,q) P(o|T=0)
+% \end{align}
+
+% If strong policy exchangeability \ref{def:policy_exchangeability} holds and observations $\mathcal{O}$ are independent of the policy $Q$ in the marginal context $T\in\{0,1\}$, the function $f$ has the desirable characteristic that (theorem \ref{th:pex_unc_ident}):
+
+% \begin{align}
+%     f(i,x|q) = P(i,x|q, T\in \{0,1\}) = P(i,x|do(q))
+% \end{align}
+
+% Practically, this seems like a satisfactory result. We might hope that where causal and evidential decision theory both agree on the strategy, that strategy is reliable. It is worth noting, however, that there has been work on producing a more general decision theory than either. It is unclear how this work fits in with the present account, if it does at all \cite{yudkowsky_functional_2017}.
+
+% The role of the causal structure here is, along with the enabling assumptions of policy exchangeability and policy/observable independence, ensuring that $P(i,x|q)=P(i,x|do(q))$. Given this identity and the basic structure imposed by the agent kernel $\kappa_{\mathcal{I}}$, causal inference can proceed on purely probabilistic grounds.
+
+% % How it should minimise this cost is in fact somewhat controversial. The more widely accepted ``causal decision theory'' \cite{weirich_causal_2016} holds that the agent should compute  $\mathbf{Q}^*$ as:
+
+% % \begin{align}
+% %     \mathbf{Q}^* &= \argmin_{q'}(C(P(i,x|do(q')))) \label{eq:causal_agent}\\
+% % \end{align}
+
+% % Where $P(i,x|do(q))$ follows from the definition of $do(q)$ applied to the causal graph implied by $\{\kappa_Q,\kappa_X,\kappa_O,\kappa_I\}$.
+
+% % An alternative, ``evidential decision theory'' as defended by Jeffrey holds that instead the agent should minimise:
+
+% % \begin{align}
+% %     \mathbf{Q}^* &= \argmin_{q'}(C(P(i,x|q'))) \label{eq:minimising_agent}\\
+% % \end{align}
+
+% % The latter definition is attractive as it uses only the joint probability distribution, but it has some problems. Mundanely, it is typically necessary to use $P(i,x|q,a)$ for some set of conditioning variables $a$, and the definition itself provides no guidance as to what variables need to be conditioned on (see Example \ref{sec:useless_medicine}). More esoterically, to deal with certain situations in which actions (or policies) are spuriously correlated with outcomes, proponents of EDT advise for conditioning on results of the deliberative process itself \cite{jeffrey_logic_1981}. Clearly $P(Q\not\in \mathbf{Q}^*|Q\in \mathbf{Q}^*)=0$. This leaves us in need of a strategy for computing the counterfactual $P(i,x|q)$ when $P(Q=q)=0$ in order to compute Eq. \ref{eq:minimising_agent}. There is an analogy here to the need identified in the potential outcomes literature for evaluating counterfactual outcomes\cite{rubin_causal_2005}.
+
+% % Jeffrey appears to suggest that the difficulty here should be resolved by an iterative process; positing some $P^0(Q)$ to begin with, and arriving at $P(Q)$ through ``reasoning about the problem''. In fact, the simplest way to do this leads directly back to causal decision theory:
+
+% % \begin{align}
+% %      P(i,x|q) &= \sum_{(\text{pa}_{Q,X,O},o)\in \text{Pa}_{Q,X,O}\times \mathcal{O}}\frac{\kappa_Q(q|\text{pa}_Q) \kappa_X(x|\text{pa}_X) \kappa_O(o|\text{pa}_O) \kappa_{I} (i|o,q) P(\text{pa}_X,\text{pa}_O,\text{pa}_Q)}{\sum_{\text{pa}_Q}\kappa_Q(q|\text{pa}_Q)P(\text{pa}_Q)}
+% % \end{align}
+
+
+
+% % If we posit each $\kappa^j_Q$ is has the signature $\{1\}\to\Delta(Q)$, this reduces to a much simpler process. Expand $P^j(i,x|q)$ in terms of kernels:
+
+% % \begin{align}
+% %     P^j(i,x|q) &= \sum_{(\text{pa}_Q,\text{pa}_X,\text{pa}_O)\in \text{Pa}_Q\cup \text{Pa}_X\cup \text{Pa}_O}\frac{\kappa^j_Q(q|\text{pa}_Q) \kappa_X(x|\text{pa}_X) \kappa_O(o|\text{pa}_O) \kappa_{I} (i|o,q) P(\text{pa}_X,\text{pa}_O,\text{pa}_Q)}{\sum_{\text{pa}_Q}\kappa^j_Q(q|\text{pa}_Q)P(\text{pa}_Q)}\\
+% %               &= \kappa^j_Q(q|1) \sum_{(\text{pa}_X,\text{pa}_O)\in  \text{Pa}_X\cup \text{Pa}_O}\frac{\kappa_X(x|\text{pa}_X) \kappa_O(o|\text{pa}_O) \kappa_{I} (i|o,q) P(\text{pa}_X,\text{pa}_O)}{\kappa^j_Q(q|1)}\\
+% %               &= \sum_{(\text{pa}_X,\text{pa}_O)\in  \text{Pa}_X\cup \text{Pa}_O} \kappa_X(x|\text{pa}_X) \kappa_O(o|\text{pa}_O) \kappa_{I} (i|o,q) P(\text{pa}_X,\text{pa}_O) \label{eq:kappaq_cancel}\\
+% %               &= P(i,x|do(q)) \label{eq:kappaq_doq}
+% % \end{align}
+
+% % Where line \ref{eq:kappaq_cancel} follows from the requirement that $\kappa^j_Q$ is positive definite and line \ref{eq:kappaq_doq} follows from the definition of $do(q)$ applied to the causal graph implied by $\{\kappa_Q,\kappa_X,\kappa_O,\kappa_I\}$.
+
+% % One possible solution is to note that given $\kappa_Q=[1\mapsto \delta_{qq^*}]$, we can define $\hat{\kappa}^\epsilon_Q=[1\mapsto (1-\epsilon)\hat{\kappa}_Q(1)+\epsilon]$. Under these assumptions, this expansion becomes:
+
+% % \begin{align}
+% %     \hat{P}^\epsilon(i,x|q) &= \hat{\kappa}^\epsilon_Q(q|1)\sum_{(\text{pa}_X,\text{pa}_O)\in \text{Pa}_X\cup \text{Pa}_O}\frac{ \kappa_X(x|\text{pa}_X) \kappa_O(o|\text{pa}_O) \kappa_{I} (i|o,q) P(\text{pa}_X,\text{pa}_O)}{\hat{\kappa}^\epsilon_Q(1)}\\
+% %                       &= \sum_{(\text{pa}_X,\text{pa}_O)\in \text{Pa}_X\cup \text{Pa}_O}\kappa_X(x|\text{pa}_X) \kappa_O(o|\text{pa}_O) \kappa_{I} (i|o,q) P(\text{pa}_X,\text{pa}_O)
+% % \end{align}
+
+% % We can then define
+
+% % \begin{align}
+% %     \hat{P}(i,x|q) = \lim_{\epsilon\to 0}\hat{P}^\epsilon(i,x|q)
+% % \end{align}
+
+% % In this case, $\hat{P}(i,x|q)$ is precisely $P(i,x|do(q))$ in more familiar notation. Note that there are many possible definitions of $\hat{\kappa}^\epsilon_Q$, not all of which will lead to $Q$ being independent from $\text{pa}_O$ and $\text{pa}_X$ and therefore may yield a different limit. The particular choice here is associated with what is known in the philosophical literature as ``Causal Decision Theory'' (CDT).
+
+% % The ``best decision theory'' has been much debated in philosophical literature, with exotic scenarios such as Newcomb's problem casting some doubt on whether the above strategy is always appropriate\cite{weirich_causal_2016}.
+
+% % If we do not insist on holding $C$ and $\hat{P}$ constant, we no longer have $Q$ automatically being independent of every other variable. Under these conditions, theorem \ref{th:pex_unc_ident} gives us the fact that strong policy exchangeability \ref{def:policy_exchangeability} and policy-observable independence \ref{def:covariate_stability} guarantees the following equalities:
+% % \begin{align}
+% %     P(i,x|do(q)) = P(i,x|q) = P(x|i,o)P(i|o,q)P(o)
+% % \end{align}
+
+% \begin{remark}
+% TODO: show that under particular specifications of policy and interventions, we recover regular causal models
+% \end{remark}
+
+% \subsection{Pasted theorems}
+
+% \textbf{Note that these theorems need updating.}
+
+% \begin{definition}[Conditioning on impossible actions]
+% Given a causal model $\langle P_H, \mu,\pi,\phi,\theta\rangle$, the conditional probability
+% \begin{align}
+%     P(v|i,a,q) &= \frac{P(v,i,a,q)}{P(i,a,q)} \\
+%               &= \frac{\sum_{h\in H} \mu(i,h,v)\pi(h,q) \phi(a,q,i) \theta(h,a) P_H(h)}{\sum_{h\in H} \pi(h,q) \phi(a,q,i) \theta(h,a) P_H(h)}
+% \end{align}
+
+% If $\phi(a,q,i) = 0$ we can define $\phi_\epsilon(a,q,i) = (1-\epsilon) \phi(a,q,i) + \epsilon$ and 
+
+% \begin{align}
+%     P_{\epsilon}(v|i,a,q) &= \frac{\sum_{h\in H} \mu(i,h,v)\pi(h,q) \phi_\epsilon(a,q,i) \theta(h,a) P_H(h)}{\sum_{h\in H} \pi(h,q) \phi_\epsilon(a,q,i) \theta(h,a) P_H(h)} \\
+%     P(v|i,a,q)            &= \lim_{\epsilon \to 0} P_{\epsilon}(v|i,a,q)\\
+%     P(v|i,a,q)            &= \frac{\sum_{h\in H} \mu(i,h,v)\pi(h,q) \theta(h,a) P_H(h)}{\sum_{h\in H} \pi(h,q) \theta(h,a) P_H(h)} \label{eq:impossible_condition}
+% \end{align}
+% \end{definition}
+
+
+
+% \begin{definition}[Common support]
+% A causal model $\langle P_H, \mu,\pi,\phi,\theta\rangle$ has $q$-common support if, for $q\in Q$
+% \begin{align}
+%     \phi(a,q,i)>0\implies P(a,i)>0
+% \end{align}
+
+% It has common support if it has $q$-common support for all $q\in Q$.
+% \end{definition}
+
+
+
+% \begin{definition}[Policy exchangeability]\label{def:policy_exchangeability}
+% A causal model $\langle P_H, \mu,\pi,\phi,\theta\rangle$ is policy exchangeable if for all $q,q'\in Q$
+% \begin{align}
+%     P(v|i,a,q) = P(v|i,a,q')
+% \end{align}
+% \end{definition}
+
+% \begin{definition}[Covariate stability]\label{def:covariate_stability}
+% A causal model $\langle P_H, \mu,\pi,\phi,\theta\rangle$ is covariate stable if for all $q,q'\in Q$
+% \begin{align}
+%   P(a|q) = P(a|q')
+% \end{align}
+% \end{definition}
+
+
+% \begin{theorem}[Policy Exchangeability and Common Support implies Identifiability]\label{th:pex_unc_ident}
+% A causal model $\langle P_H(h),\theta,\pi,\phi,\mu \rangle$ that is policy exchangeable and has common support is $\underline{\mathscr{E}}, D^\infty$-identifiable.
+% \end{theorem}
+
+% \begin{proof}
+% Let $P(\cdot)$ be a probability distribution generated by $\langle P_H(h),\theta,\pi,\phi,\mu \rangle$ and $P_q(\cdot)$ be a probability distribution generated by $\langle P_H(h),\delta_{qq'},\theta,\pi,\phi,\mu \rangle$.
+
+% Note that, using the limit procedure defined in Eq. \ref{eq:impossible_condition}, for all $q,q'\in Q$
+% \begin{align}
+%     P_q(v|i,a,q) &= \frac{\sum_{h\in H} \mu(i,h,v)\pi(h,q) \theta(h,a) P_H(h)}{\sum_{h\in H} \pi(h,q) \theta(h,a) P_H(h)} \\
+%                  &= P_{q'}(v|i,a,q)
+% \end{align}
+
+% Furthermore, it is trivially true that
+% \begin{align}
+%     P_q(v|i,a,q) = P(v|i,a,q)
+% \end{align}
+
+% Given policy exchangeability, we therefore have for all $q,q'\in Q$
+% \begin{align}
+%     P_{q'}(v|i,a,q) &= P(v|i,a,q)\\
+%     P_{q'}(v|i,a,q) &= P(v|i,a,q)\\
+%     \sum_{q\in Q} P_{q'}(v|i,a,q) P(q|i,a) &= \sum_{q\in Q} P(v|i,a,q) \\
+%     P_q(v|i,a) = P(v|i,a)
+% \end{align}
+
+% It is straightforward to show that $P_q(a) = P(a)$:
+% \begin{align}
+%     P_q(a) &= \sum_{h\in H} P_H(h) \theta(h,a) \\
+%           &= P(a)
+% \end{align}
+
+% Finally, we have
+% \begin{align}
+%     P_q(i,v) &= P(i,v|do(q))\\
+%              &= \sum_{a\in A} P_q(v|i,a) \phi(a,q,i) P_q(a)\\
+%              &= \sum_{a\in A} P(v|i,a) \phi(a,q,i) P(a)\\ \label{eq:counterfactual_identifiability}
+%              &= \underline{\mathscr{E}}(D^\infty)
+% \end{align}
+
+% Note that $P(v|a,i)$ is only defined if $P(a,i)>0$, thus we also require common support for line \ref{eq:counterfactual_identifiability}.
+% \end{proof}
+
+
+% \section{A general scheme for causal problems}
+
+
+
+% \textbf{Notation for DAG sets}
+
+% I want a nice notation for sets of directed acyclic graphs. In particular, I need to be able to say for variable sets $\mathcal{A}$ and $\mathcal{B}$ that the following must hold for every DAG in a set:
+% \begin{itemize}
+%     \item Set $\mathcal{A}$ is fully connected to set $\mathcal{B}$ with direction $\mathcal{A}\to\mathcal{B}$ (proposal: $\mathcal{A}\Rightarrow\mathcal{B}$)
+%     \item Every member of $\mathcal{A}$ is connected to a member $\mathcal{B}$ with direction $\mathcal{A}\to \mathcal{B}$ ($\mathcal{B}\to\mathcal{A}$) (proposal: $\mathcal{A}\rightarrowtail\mathcal{B}$ and $\mathcal{B}\Mapsto\mathcal{A}$ respectively)
+%     \item Any connection between $\mathcal{A}$ and $\mathcal{B}$ must go $\mathcal{A}\to\mathcal{B}$ (proposal: $\mathcal{A}\to\mathcal{B}$)
+%     \item There are no connections between $\mathcal{A}$ and $\mathcal{B}$ (proposal 1: $\mathcal{A}\not\to\mathcal{B}$, proposal 2: if represented as a graph, lack of edge between $\mathcal{A}$ and $\mathcal{B}$)
+%     \item Every member of $\mathcal{A}$ has no parents (proposal: $U \not\to \mathcal{A}$ where $\mathcal{U}$ stands for ``the universe'')
+% \end{itemize}
+
+% If all the relations can be written with arrows, the set can be represented as a graph, which might make it easier to read.
+
+% \textbf{Other notation:} 
+% \begin{itemize}
+%     \item random variables have capital letters (e.g. $V$)
+%     \item sets of random variables are script (e.g. $\mathcal{V}$)
+%     \item graphs (DAGs) are alternate script $\mathscr{G}$
+%     \item sets of graphs are underlined alternate script $\GS{G}$
+%     \item functions and kernels are greek letters $\phi,\theta$
+%     \item $\Delta(X)$ is the set of probability distributions over $X$
+%     \item $\mathscr{G}(X)$ is the set of directed acyclic graphs over $X$
+%     \item $\mathcal{X}$ represents variables not under direct control (also called ``system variables'')
+%     \item $\mathcal{I}$ represents an intervention or action set; $\mathcal{J}$ represents a perfect intervention set
+%     \item $\mathcal{O}$ represents a set of variables observed prior to choosing an action (``observed state'')
+%     \item $Q$ is a variable that indexes a set of policies  $\pi_Q:\text{Range}(O)\to \Delta(\mathcal{I})$
+% \end{itemize}
+
+% \subsection{Causal problems}
+
+% A causal problem has 5 elements: $\langle \mathcal{V}, \GS{G}, \Pi, \rho, D \rangle$.
+
+% \begin{itemize}
+%   \item $\mathcal{V}$: set of random variables distributed according to $\mu$
+%   \item $\GS{G}$: Set of directed acyclic graphs over $\mathcal{V}$
+%   \item $\Pi$: set of conditional probabilities
+%   \item $\rho$: Loss
+%   \begin{itemize}
+%       \item Regret: $\mathcal{I}\to \mathbb{R}$
+%       \item Model loss $\Delta(\mathcal{V})\times \mathscr{G}(\mathcal{V}) \to \mathbb{R}$
+%   \end{itemize}
+%   \item $D$: Dataset, with $D\sim P^\mu(\mathcal{A}|\mathcal{B})$ with $\mathcal{A},\mathcal{B}\subset\mathcal{V}$
+% \end{itemize}
+
+% Assume that $\mu$ is Markov with respect to $\mathscr{G}$ for all $\mathscr{G}\in\GS{G}$, and that every $\pi\in \Pi$ agrees with the relevant conditional/marginal of $\mu$.
+
+% \subsubsection{Decision Theories}
+
+% We could add a decision theory $\delta:\Delta (\mathcal{V})\times \mathscr{G}(\mathcal{V})\to (Q \to \Delta(\mathcal{X}\times\mathcal{I}))$ to the general scheme for causal problems. This is usually either causal decision theory - $\delta(\mu,\mathscr{G}) = P^\mu_\mathscr{G}(\mathcal{X}|do(Q))$ or evidential decision theory $\delta(\mu,\mathscr{G}) = P^\mu(\mathcal{X}|Q)$. However, it is almost never considered in practice.
+
+% Typically in a causal inference problem, the set of interventions $\mathcal{I}$ are assumed to have no parents in the true causal graph $\mathscr{G}^*$. This leads to $P(\mathcal{X}|\mathcal{I})=P(\mathcal{X}|do(\mathcal{I}))$, and so causal and evidential decision theory agree. This assumption isn't logically necessary, but we don't currently have a satisfactory theory of how to deal with confounded policy choices. Thus it is usually preferable to set the problem up such that $P(\mathcal{X}|\mathcal{I})=P(\mathcal{X}|do(\mathcal{I}))$, and as noted this is almost always true in practice.
+
+% Despite the fact that they don't typically differ, I want to maintain the distinction between the intervention or action set $\mathcal{I}$, which is a set of random variables, and the $do$ operation, which is a map $\Delta(\mathcal{V})\times \mathscr{G}(\mathcal{V})\times \text{Range}(\mathcal{V})\to \Delta(\mathcal{V})$.
+
+% \begin{remark}
+% It is plainly false to assume that $\mathcal{I}$ has no ancestors; a more palatable assumption would be something like ``ancestors of $\mathcal{I}$ or $\mathcal{X}$ either have negligible mutual information with $\mathcal{I}$ or negligible mutual information with $\mathcal{X}$''. Can the ``ancestor-free'' assumption be made without loss of generality?
+% \end{remark}
+
+% \subsubsection{Perfect Interventions and Soft Interventions}
+
+% Many causal inference problems employ perfect interventions, for which I will use the letter $\mathcal{J}$. A causal inference problem with perfect interventions assumes the following edges and conditional distributions:
+% \begin{enumerate}
+%     \item $\{\emptyset\to \mathcal{J},\mathcal{J}\to\mathcal{X}\}\subset\GS{E}$
+%     \item $\text{Range}(J)=\{0,1\}\times \text{Range}(\text{Children}(J))$
+%     \item $\{\pi(\text{Children}(J)=\mathbf{x})|J=(1,\mathbf{y}))=\delta_xy|J\in\mathcal{J}\}\subset \Pi$
+% \end{enumerate}
+
+% The notation $P(X|J_A=(1,y))$ is less elegant than $P(X|do(A=y))$, but it allows for consistency.
+
+% A soft intervention is distinguished from a perfect intervention in that soft interventions only have conditions (1) and (2).
+
+% \begin{remark}
+% A causal model with a perfect intervention for each system variable looks like it should be isomorphic to a Causal Bayesian Network, but this requires proof.
+% \end{remark}
+
+% % \subsection{Causal modelling problem}
+
+% % A causal modelling problem has 5 elements: $\langle \mathcal{V}, \GS{G}, \Pi, \lambda, D \rangle$ (a modelling problem has not decision theory). As above, except:
+
+% % Subsets of $\mathcal{V}$ not necessarily meaningful.
+
+% % Loss $\lambda$ instead of cost $\rho$. $\lambda:\delta(\mathcal{V})\times \mathscr{G}(\mathcal{V}) \to \mathbb{R}$. I think this loss should be parametrised by $\mu, \mathscr{G}^*$.
+
+% % As with causal decision problems, one could construct ``causal'' and ``evidential'' variants of modelling problems. The evidential variant requires a set of intervention variables $\mathcal{I}\subset\mathcal{V}$ and likely amounts to finding a factorisation of $\mu$ while insisting on $\mathcal{I}\rightarrowtail\mathcal{V}$. 
+% % The causal variant, on the other hand, is difficult to define without circularity. $P(\mathcal{A}|do(\mathcal{B}))$ is defined with respect to $\mu$ and what we posit is the true graph $\mathscr{G}^*$. However, it is not clear by what criteria we may distinguish the true graph except that it yields the correct set of interventional distributions.
+
+% % I also believe this, but haven't proved it/found a reference: for any graph $\mathscr{G}$ on a set of observed variables and probability distribution $\mu$, there is a graph $\overline{\mathscr{G}}$ that matches $\mathscr{G}$ on observed variables and may be augmented with hidden variables such that $\mu$ is Markov with respect to $\overline{\mathscr{G}}$. Or, more briefly, any $\mu$ can go with any $\mathscr{G}$.
+
